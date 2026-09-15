@@ -1,0 +1,25 @@
+[package]
+name = "cosmic-applet-tailscale"
+description = "COSMIC panel applet for Tailscale"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+tailscale-localapi.workspace = true
+beszel-client.workspace = true
+libcosmic = { workspace = true, features = ["applet", "applet-token", "tokio", "a11y", "dbus-config", "wgpu"] }
+keyring.workspace = true
+tokio.workspace = true
+futures-util.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+open.workspace = true
+i18n-embed.workspace = true
+i18n-embed-fl.workspace = true
+rust-embed.workspace = true
+
+[[bin]]
+name = "cosmic-applet-tailscale"
+path = "src/main.rs"

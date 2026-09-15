@@ -1,0 +1,47 @@
+[workspace]
+resolver = "3"
+members = [
+    "crates/tailscale-localapi",
+    "crates/cosmic-tailscale",
+    "crates/cosmic-applet-tailscale",
+    "crates/caddy-admin",
+    "crates/beszel-client",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "MPL-2.0"
+rust-version = "1.93"
+
+[workspace.dependencies]
+tailscale-localapi = { path = "crates/tailscale-localapi" }
+caddy-admin = { path = "crates/caddy-admin" }
+beszel-client = { path = "crates/beszel-client" }
+
+libcosmic = { git = "https://github.com/pop-os/libcosmic", rev = "7e82198ab1aba712640b0167e58ad37bf03012ca", default-features = false }
+
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "time", "io-util", "process", "sync", "fs"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+hyper = { version = "1", features = ["client", "http1"] }
+hyper-util = { version = "0.1", features = ["client", "client-legacy", "http1", "tokio"] }
+http-body-util = "0.1"
+futures-util = "0.3"
+thiserror = "2"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+chrono = { version = "0.4", features = ["serde"] }
+open = "5"
+notify-rust = "4"
+dirs = "6"
+url = "2"
+reqwest = { version = "0.13", features = ["json"] }
+keyring = "4"
+i18n-embed-fl = "0.10"
+i18n-embed = { version = "0.16", features = ["fluent-system", "desktop-requester"] }
+rust-embed = "8"
+
+[profile.release]
+opt-level = 2
+lto = "thin"

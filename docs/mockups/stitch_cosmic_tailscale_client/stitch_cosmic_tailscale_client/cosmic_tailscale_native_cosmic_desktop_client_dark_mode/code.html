@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script><script id="tailwind-config">tailwind.config={"darkMode":"class","theme":{"extend":{"colors":{"tertiary-fixed-dim":"#bcc7dc","surface-container":"#1f2227","on-tertiary-container":"#263041","on-error":"#690005","tertiary":"#bcc7dc","on-secondary-fixed":"#002114","inverse-primary":"#006d41","surface":"#0e1013","on-error-container":"#ffdad6","on-background":"#e3e2e6","on-secondary-container":"#00452e","on-tertiary-fixed-variant":"#3d4758","inverse-surface":"#e3e2e6","on-secondary-fixed-variant":"#005137","primary":"#48a974","primary-hover":"#3ca06b","error":"#ef4444","on-primary-fixed":"#002110","on-surface":"#f1f5f9","on-tertiary":"#263141","primary-container":"#234e38","outline":"#3e4551","error-container":"#93000a","secondary":"#45dfa4","on-tertiary-fixed":"#111c2b","on-surface-variant":"#94a3b8","surface-container-lowest":"#0e1013","tertiary-fixed":"#d8e3f8","on-primary":"#ffffff","surface-container-highest":"#363b45","surface-bright":"#38393c","on-secondary":"#003825","primary-fixed-dim":"#79daa0","tertiary-container":"#8d98ac","outline-variant":"#2d3139","secondary-container":"#00bd85","background":"#0e1013","surface-tint":"#48a974","surface-container-low":"#181a1e","on-primary-container":"#e2e8f0","primary-fixed":"#95f7bb","inverse-on-surface":"#2f3033","secondary-fixed":"#68fcbf","on-primary-fixed-variant":"#005230","surface-container-high":"#262930","surface-dim":"#0e1013","surface-variant":"#242831","secondary-fixed-dim":"#45dfa4"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},"fontFamily":{"headline":["Nunito Sans"],"display":["Nunito Sans"],"body":["Nunito Sans"],"label":["Nunito Sans"]}}}}</script></head><body class="bg-[#0e1013] font-body text-slate-100 antialiased selection:bg-emerald-800 selection:text-white"><header class="fixed top-0 left-0 right-0 h-10 z-50 bg-[#141619]/95 backdrop-blur-md border-b border-[#262a32] shadow-[0_2px_12px_rgba(0,0,0,0.5)]"><div class="h-10 w-full px-4 flex items-center justify-between text-xs"><div class="flex items-center gap-3"><span class="font-bold tracking-wide text-slate-200 flex items-center gap-1.5"><span class="material-symbols-outlined text-[16px] text-emerald-400">grid_view</span>Applications</span><div class="flex items-center gap-1.5 bg-[#1f2228] border border-[#2d323b] px-2.5 py-0.5 rounded-full text-slate-300"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span><span>Workspace 1</span></div></div><div class="flex items-center gap-1 font-semibold text-slate-300"><span>Wed Oct 23</span><span class="font-normal opacity-40">•</span><span>14:42</span></div><div class="flex items-center gap-3"><div class="flex items-center gap-1.5 bg-emerald-950/80 border border-emerald-600/30 px-2.5 py-0.5 rounded-full text-emerald-300 text-[11px] font-medium"><span class="material-symbols-outlined text-[14px]">vpn_key</span><span>orca-cat.ts.net</span></div><div class="flex items-center gap-2 text-slate-400"><span class="material-symbols-outlined text-[16px] hover:text-slate-200 cursor-pointer">wifi</span><span class="material-symbols-outlined text-[16px] hover:text-slate-200 cursor-pointer">volume_up</span><span class="material-symbols-outlined text-[16px] hover:text-slate-200 cursor-pointer">battery_charging_full</span></div><div class="w-6 h-6 rounded-full bg-emerald-600 flex items-center justify-center text-white"><span class="material-symbols-outlined text-[14px]">person</span></div></div></div></header><div class="pt-10 flex flex-col min-h-screen bg-[#0e1013]"><div class="p-4 flex-1 flex flex-col"><div class="rounded-xl bg-[#181a1e] border border-[#262a32] shadow-[0_8px_32px_rgba(0,0,0,0.4)] overflow-hidden flex-1 flex flex-col"><div class="h-12 bg-[#141619] border-b border-[#242830] px-4 flex items-center justify-between select-none"><div class="flex items-center gap-3"><div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-[#ef4444] inline-block"></span><span class="w-3 h-3 rounded-full bg-[#eab308] inline-block"></span><span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span></div><span class="font-headline font-semibold text-sm text-slate-200 ml-2 flex items-center gap-1.5"><span class="material-symbols-outlined text-[18px] text-emerald-400">lan</span>cosmic-tailscale</span></div><div class="flex items-center gap-2 bg-[#101215] border border-[#2a2f38] px-3 py-1 rounded-lg w-72 focus-within:border-emerald-500/60 transition-colors"><span class="material-symbols-outlined text-[16px] text-slate-400">search</span><input class="bg-transparent border-none outline-none text-xs w-full text-slate-200 placeholder:text-slate-500 font-body" placeholder="Filter devices, IPs, or tags..." type="text"/></div><div class="flex items-center gap-2"><button class="p-1.5 rounded hover:bg-[#252932] hover:text-slate-200 text-slate-400 transition-colors"><span class="material-symbols-outlined text-[18px]">sync</span></button><button class="p-1.5 rounded hover:bg-[#252932] hover:text-slate-200 text-slate-400 transition-colors"><span class="material-symbols-outlined text-[18px]">settings</span></button></div></div><div class="flex-1 flex"><aside class="w-64 bg-[#141619] border-r border-[#242830] p-3 flex flex-col justify-between shrink-0"><div class="space-y-4"><div class="px-2"><div class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Tailnet</div><div class="text-sm font-semibold text-slate-200">orca-cat.ts.net</div><div class="flex items-center gap-1.5 text-xs text-emerald-400 mt-1"><span class="w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-emerald-950"></span>Connected (100.84.12.9)</div></div><nav class="space-y-1" data-active-classes="bg-[#234e38] text-white font-semibold"><a aria-current="page" class="flex items-center gap-2.5 px-3 py-2 rounded-lg transition-colors bg-[#234e38] text-white font-semibold border border-emerald-600/30 shadow-sm" data-path="devices" href="#"><span class="material-symbols-outlined text-[18px]">devices</span>Machines</a><a class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-[#1f232b] hover:text-slate-200 transition-colors" data-path="exit-nodes" href="#"><span class="material-symbols-outlined text-[18px]">alt_route</span>Exit Nodes</a><a class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-[#1f232b] hover:text-slate-200 transition-colors" data-path="services" href="#"><span class="material-symbols-outlined text-[18px]">dns</span>Services &amp; DNS</a><a class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-[#1f232b] hover:text-slate-200 transition-colors" data-path="access-controls" href="#"><span class="material-symbols-outlined text-[18px]">shield</span>Access Controls</a><a class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-[#1f232b] hover:text-slate-200 transition-colors" data-path="settings" href="#"><span class="material-symbols-outlined text-[18px]">tune</span>Preferences</a></nav></div><div class="bg-[#1a1c21] border border-[#272b34] p-3 rounded-lg"><div class="flex items-center justify-between text-xs text-slate-400 mb-1"><span>Key Expiry</span><span class="font-medium text-amber-300">84 days</span></div><div class="w-full bg-[#282d36] h-1.5 rounded-full overflow-hidden"><div class="bg-emerald-500 h-full w-3/4 rounded-full shadow-[0_0_8px_rgba(52,211,153,0.4)]"></div></div></div></aside><main class="flex-1 bg-[#101215] p-6 overflow-y-auto relative"><div class="flex flex-col w-full space-y-6 select-none">
+<!-- Interactive Applet Popover Dock & Quick Status Bar -->
+<div class="relative w-full">
+<!-- Quick Applet Top Dock (COSMIC panel flyout preview) -->
+<div class="w-full bg-[#181a1f] border border-[#282c35] rounded-xl p-4 shadow-md">
+<div class="flex flex-wrap items-center justify-between gap-4">
+<!-- Identity & Connection status -->
+<div class="flex items-center gap-3.5">
+<div class="relative">
+<div class="w-10 h-10 rounded-full bg-[#262a32] border border-[#343a45] flex items-center justify-center font-bold text-slate-200 text-sm">
+              AC
+            </div>
+<span class="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-400 ring-2 ring-[#181a1f]"></span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="font-headline font-semibold text-slate-100 text-base">orca-cat.ts.net</span>
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-500/20 border border-emerald-500/40 text-emerald-300">Connected</span>
+<span class="text-xs px-2 py-0.5 rounded-md bg-[#21242c] border border-[#2d333e] text-slate-300 font-mono">100.84.12.9</span>
+</div>
+<span class="text-xs text-slate-400">alex@orca-cat.ts.net • COSMIC Applet v1.1.4</span>
+</div>
+</div>
+<!-- Exit Node Fast Switcher & Toggle -->
+<div class="flex items-center gap-3">
+<div class="flex items-center gap-2 bg-[#21242b] border border-[#2d323c] px-3 py-1.5 rounded-lg">
+<span class="material-symbols-outlined text-[18px] text-emerald-400">alt_route</span>
+<span class="text-xs text-slate-400">Exit Node:</span>
+<select class="bg-transparent text-xs font-semibold text-slate-200 focus:outline-none cursor-pointer">
+<option class="bg-[#181a1f] text-slate-200" value="none">None (Direct Mesh)</option>
+<option class="bg-[#181a1f] text-slate-200" value="aws">aws-prod-gateway (Frankfurt)</option>
+<option class="bg-[#181a1f] text-slate-200" value="mullvad-us">Mullvad (US - NYC)</option>
+<option class="bg-[#181a1f] text-slate-200" value="mullvad-de">Mullvad (DE - FRA)</option>
+</select>
+</div>
+<!-- Main Tailscale Daemon Toggle -->
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" id="tailscale-daemon-toggle" type="checkbox"/>
+<div class="w-11 h-6 bg-[#2d323c] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-200 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500 shadow-inner"></div>
+</label>
+<!-- Quick Dropdown Toggle for Flyout -->
+<button class="flex items-center gap-1 bg-[#21242b] hover:bg-[#282d36] text-slate-200 border border-[#2e333d] px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors" id="toggle-flyout-btn">
+<span class="material-symbols-outlined text-[16px]">tune</span>
+<span>Quick Applet</span>
+<span class="material-symbols-outlined text-[14px]">expand_more</span>
+</button>
+</div>
+</div>
+<!-- Expandable Popover Flyout (libcosmic popover aesthetic) -->
+<div class="mt-4 pt-4 bg-[#14161a] border border-[#282d36] rounded-xl p-4 shadow-xl space-y-4" id="cosmic-flyout">
+<div class="flex items-center justify-between pb-2">
+<div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-400">
+<span class="material-symbols-outlined text-[16px] text-emerald-400">nearby</span>
+<span>Recent Peers &amp; Transfer Targets</span>
+</div>
+<div class="flex items-center gap-2">
+<button class="px-2.5 py-1 text-xs rounded bg-[#20232a] border border-[#2e343f] text-slate-300 hover:bg-[#282d37] hover:text-white transition-colors flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[14px] text-amber-300">snooze</span>
+<span>Suspend for 1h</span>
+</button>
+<button class="px-2.5 py-1 text-xs rounded bg-[#20232a] border border-[#2e343f] text-slate-300 hover:bg-[#282d37] hover:text-white transition-colors flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[14px] text-emerald-400">admin_panel_settings</span>
+<span>Admin Console</span>
+</button>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+<!-- Quick Peer 1 -->
+<div class="bg-[#1b1e24] border border-[#282d36] p-3 rounded-lg flex items-center justify-between hover:border-slate-600 transition-colors">
+<div class="flex items-center gap-2.5 truncate">
+<span class="w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-emerald-950 shrink-0"></span>
+<div class="truncate">
+<p class="text-xs font-semibold text-slate-200 truncate">framework-laptop</p>
+<p class="text-[11px] font-mono text-slate-400">100.90.11.2</p>
+</div>
+</div>
+<button class="p-1 rounded text-slate-400 hover:text-white hover:bg-[#262a33]" onclick="navigator.clipboard.writeText('100.90.11.2')" title="Copy IP">
+<span class="material-symbols-outlined text-[15px]">content_copy</span>
+</button>
+</div>
+<!-- Quick Peer 2 -->
+<div class="bg-[#1b1e24] border border-[#282d36] p-3 rounded-lg flex items-center justify-between hover:border-slate-600 transition-colors">
+<div class="flex items-center gap-2.5 truncate">
+<span class="w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-emerald-950 shrink-0"></span>
+<div class="truncate">
+<p class="text-xs font-semibold text-slate-200 truncate">homelab-caddy-srv</p>
+<p class="text-[11px] font-mono text-slate-400">100.115.8.91</p>
+</div>
+</div>
+<button class="p-1 rounded text-slate-400 hover:text-white hover:bg-[#262a33]" onclick="navigator.clipboard.writeText('100.115.8.91')" title="Copy IP">
+<span class="material-symbols-outlined text-[15px]">content_copy</span>
+</button>
+</div>
+<!-- Quick Peer 3: Taildrop target -->
+<div class="bg-emerald-950/70 border border-emerald-600/40 text-emerald-200 p-3 rounded-lg flex items-center justify-between cursor-pointer hover:bg-emerald-900/60 transition-colors">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-emerald-400">upload_file</span>
+<div>
+<p class="text-xs font-bold text-slate-100">Taildrop Drop Zone</p>
+<p class="text-[11px] text-emerald-300/80">Drag &amp; drop files to share</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-[16px] text-emerald-400">arrow_forward</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Dual Pane Main Interface (libcosmic Rust style) -->
+<div class="grid grid-cols-12 gap-6 items-start">
+<!-- Left Navigation Panel (Machine & Peer Navigator) -->
+<div class="col-span-12 lg:col-span-4 space-y-4">
+<!-- Search Machine filter with shortcut chip -->
+<div class="relative bg-[#181a1f] border border-[#272b34] rounded-xl p-1.5 flex items-center focus-within:border-emerald-500/60 transition-colors">
+<span class="material-symbols-outlined text-[18px] text-slate-400 ml-2.5">filter_alt</span>
+<input class="w-full bg-transparent px-2.5 py-1 text-xs text-slate-200 placeholder:text-slate-500 focus:outline-none" id="machine-filter" placeholder="Filter machines (14)..." type="text"/>
+<kbd class="hidden sm:inline-block px-1.5 py-0.5 text-[10px] font-mono bg-[#242831] border border-[#333844] text-slate-300 rounded mr-1.5 shadow-sm">Ctrl+K</kbd>
+</div>
+<!-- Device Groups -->
+<div class="space-y-4">
+<!-- Group: Pinned / My Devices -->
+<div class="space-y-1.5">
+<div class="px-2 flex items-center justify-between">
+<span class="text-[11px] font-bold tracking-wider uppercase text-slate-400">Pinned / My Devices</span>
+<span class="text-[11px] font-semibold text-emerald-400">4</span>
+</div>
+<!-- Machine 1: desktop-office (Selected) -->
+<div class="bg-[#234e38] border border-emerald-600/40 text-white rounded-xl p-3 shadow-sm cursor-pointer transition-all">
+<div class="flex items-start justify-between gap-2">
+<div class="flex items-center gap-2.5">
+<div class="p-1.5 rounded-lg bg-[#153424] text-emerald-300 border border-emerald-500/30">
+<span class="material-symbols-outlined text-[18px]">desktop_windows</span>
+</div>
+<div>
+<div class="flex items-center gap-1.5">
+<span class="text-xs font-bold font-headline text-white">desktop-office</span>
+<span class="text-[10px] px-1.5 py-0.2 bg-emerald-500 text-slate-950 rounded-full font-bold">This Machine</span>
+</div>
+<p class="text-[11px] text-emerald-200/80 font-mono">100.84.12.44</p>
+</div>
+</div>
+<div class="text-right">
+<span class="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-300">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-300"></span> 14ms
+                </span>
+<p class="text-[10px] text-emerald-200/70">Pop!_OS 24.04</p>
+</div>
+</div>
+</div>
+<!-- Machine 2: framework-laptop -->
+<div class="bg-[#1b1e24] hover:bg-[#22262e] border border-[#272b34] text-slate-200 rounded-xl p-3 cursor-pointer transition-colors">
+<div class="flex items-start justify-between gap-2">
+<div class="flex items-center gap-2.5">
+<div class="p-1.5 rounded-lg bg-[#252932] text-slate-400">
+<span class="material-symbols-outlined text-[18px]">laptop_mac</span>
+</div>
+<div>
+<div class="flex items-center gap-1.5">
+<span class="text-xs font-semibold text-slate-200">framework-laptop</span>
+</div>
+<p class="text-[11px] text-slate-400 font-mono">100.90.11.2</p>
+</div>
+</div>
+<div class="text-right">
+<span class="inline-flex items-center gap-1 text-[11px] text-emerald-400 font-medium">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Online
+                </span>
+<p class="text-[10px] text-slate-400">Arch Linux</p>
+</div>
+</div>
+</div>
+<!-- Machine 3: homelab-caddy-srv -->
+<div class="bg-[#1b1e24] hover:bg-[#22262e] border border-[#272b34] text-slate-200 rounded-xl p-3 cursor-pointer transition-colors">
+<div class="flex items-start justify-between gap-2">
+<div class="flex items-center gap-2.5">
+<div class="p-1.5 rounded-lg bg-[#252932] text-slate-400">
+<span class="material-symbols-outlined text-[18px]">dns</span>
+</div>
+<div>
+<div class="flex items-center gap-1.5">
+<span class="text-xs font-semibold text-slate-200">homelab-caddy-srv</span>
+<span class="text-[9px] px-1.5 py-0.2 bg-amber-950/70 border border-amber-600/40 text-amber-300 rounded font-semibold">Caddy</span>
+</div>
+<p class="text-[11px] text-slate-400 font-mono">100.115.8.91</p>
+</div>
+</div>
+<div class="text-right">
+<span class="inline-flex items-center gap-1 text-[11px] text-emerald-400 font-medium">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Online
+                </span>
+<p class="text-[10px] text-slate-400">Debian 12</p>
+</div>
+</div>
+</div>
+<!-- Machine 4: phone-pixel9 -->
+<div class="bg-[#1b1e24] hover:bg-[#22262e] border border-[#272b34] text-slate-200 rounded-xl p-3 cursor-pointer transition-colors">
+<div class="flex items-start justify-between gap-2">
+<div class="flex items-center gap-2.5">
+<div class="p-1.5 rounded-lg bg-[#252932] text-slate-400">
+<span class="material-symbols-outlined text-[18px]">smartphone</span>
+</div>
+<div>
+<span class="text-xs font-semibold text-slate-200">phone-pixel9</span>
+<p class="text-[11px] text-slate-400 font-mono">100.64.20.10</p>
+</div>
+</div>
+<div class="text-right">
+<span class="inline-flex items-center gap-1 text-[11px] text-slate-400">
+<span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span> 5m ago
+                </span>
+<p class="text-[10px] text-slate-500">Android 15</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Group: Shared with Me -->
+<div class="space-y-1.5 pt-2">
+<div class="px-2 flex items-center justify-between">
+<span class="text-[11px] font-bold tracking-wider uppercase text-slate-400">Shared with Me</span>
+<span class="text-[11px] font-semibold text-slate-400">2</span>
+</div>
+<!-- Machine 5: storage-truenas -->
+<div class="bg-[#1b1e24] hover:bg-[#22262e] border border-[#272b34] text-slate-200 rounded-xl p-3 cursor-pointer transition-colors">
+<div class="flex items-start justify-between gap-2">
+<div class="flex items-center gap-2.5">
+<div class="p-1.5 rounded-lg bg-[#252932] text-slate-400">
+<span class="material-symbols-outlined text-[18px]">folder_special</span>
+</div>
+<div>
+<span class="text-xs font-semibold text-slate-200">storage-truenas</span>
+<p class="text-[11px] text-slate-400 font-mono">100.77.4.15</p>
+</div>
+</div>
+<div class="text-right">
+<span class="inline-flex items-center gap-1 text-[11px] text-emerald-400 font-medium">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Online
+                </span>
+<p class="text-[10px] text-slate-400">FreeBSD</p>
+</div>
+</div>
+</div>
+<!-- Machine 6: aws-prod-gateway -->
+<div class="bg-[#1b1e24] hover:bg-[#22262e] border border-[#272b34] text-slate-200 rounded-xl p-3 cursor-pointer transition-colors">
+<div class="flex items-start justify-between gap-2">
+<div class="flex items-center gap-2.5">
+<div class="p-1.5 rounded-lg bg-[#252932] text-slate-400">
+<span class="material-symbols-outlined text-[18px]">cloud</span>
+</div>
+<div>
+<div class="flex items-center gap-1.5">
+<span class="text-xs font-semibold text-slate-200">aws-prod-gateway</span>
+<span class="text-[9px] px-1.5 py-0.2 bg-emerald-950/80 border border-emerald-600/40 text-emerald-300 rounded font-bold">Exit</span>
+</div>
+<p class="text-[11px] text-slate-400 font-mono">100.120.30.1</p>
+</div>
+</div>
+<div class="text-right">
+<span class="inline-flex items-center gap-1 text-[11px] text-emerald-400 font-medium">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Exit Active
+                </span>
+<p class="text-[10px] text-slate-400">Ubuntu 24.04</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Local Daemon Socket Diagnostics Card -->
+<div class="bg-[#181a1f] border border-[#272b34] rounded-xl p-3 space-y-2 text-xs">
+<div class="flex items-center justify-between text-slate-400">
+<span class="flex items-center gap-1 font-semibold text-slate-300">
+<span class="material-symbols-outlined text-[15px] text-emerald-400">terminal</span>
+            LocalAPI Daemon
+          </span>
+<span class="font-mono text-[10px] text-emerald-400">&lt;0.4ms IPC</span>
+</div>
+<div class="p-2 bg-[#121417] border border-[#242831] rounded-lg font-mono text-[10px] text-slate-400 truncate">
+          unix:///var/run/tailscale/tailscaled.sock
+        </div>
+</div>
+</div>
+<!-- Right Pane: Machine Detail & Caddy Proxy Manager -->
+<div class="col-span-12 lg:col-span-8 space-y-6">
+<!-- 1. Machine Header & Action Bar -->
+<div class="bg-[#181a1f] border border-[#282c35] rounded-xl p-5 shadow-sm space-y-5">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+<div>
+<div class="flex items-center gap-3">
+<h2 class="font-headline text-2xl font-bold text-slate-100">desktop-office</h2>
+<span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-950/70 border border-emerald-500/40 text-emerald-300 flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                Pop!_OS 24.04 COSMIC
+              </span>
+</div>
+<!-- MagicDNS & IPv4 badge strip -->
+<div class="flex flex-wrap items-center gap-2 mt-2">
+<div class="flex items-center gap-1 bg-[#21242b] border border-[#2d333e] px-2.5 py-1 rounded-md text-xs font-mono text-slate-200">
+<span>100.84.12.44</span>
+<button class="hover:text-emerald-400 transition-colors text-slate-400" onclick="navigator.clipboard.writeText('100.84.12.44')" title="Copy IP">
+<span class="material-symbols-outlined text-[14px]">content_copy</span>
+</button>
+</div>
+<div class="flex items-center gap-1 bg-[#21242b] border border-[#2d333e] px-2.5 py-1 rounded-md text-xs font-mono text-slate-400">
+<span>desktop-office.orca-cat.ts.net</span>
+<button class="hover:text-emerald-400 transition-colors text-slate-400" onclick="navigator.clipboard.writeText('desktop-office.orca-cat.ts.net')" title="Copy MagicDNS">
+<span class="material-symbols-outlined text-[14px]">link</span>
+</button>
+</div>
+</div>
+</div>
+<!-- DERP Latency Gauge Chart (libcosmic minimal SVG) -->
+<div class="flex items-center gap-3 bg-[#21242b] border border-[#2d323c] px-3.5 py-2 rounded-xl self-start sm:self-auto">
+<svg class="w-10 h-10 -rotate-90" viewbox="0 0 36 36">
+<path class="text-[#2e333e]" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="3.5"></path>
+<path class="text-emerald-400" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-dasharray="88, 100" stroke-linecap="round" stroke-width="3.5"></path>
+</svg>
+<div>
+<p class="text-[11px] uppercase tracking-wider text-slate-400 font-bold">Mesh Quality</p>
+<p class="text-sm font-bold text-slate-100">14ms Direct</p>
+</div>
+</div>
+</div>
+<!-- Action Button Strip (iced / libcosmic styled rounded buttons) -->
+<div class="flex flex-wrap items-center gap-2 pt-1">
+<!-- Primary SSH Action -->
+<button class="flex items-center gap-2 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-sm transition-all">
+<span class="material-symbols-outlined text-[17px]">terminal</span>
+<span>SSH Terminal (cosmic-term)</span>
+</button>
+<!-- DERP Check -->
+<button class="flex items-center gap-1.5 px-3 py-2 bg-[#252830] hover:bg-[#2e333d] border border-[#343a46] text-slate-200 rounded-xl text-xs font-semibold transition-colors">
+<span class="material-symbols-outlined text-[16px] text-amber-300">network_check</span>
+<span>Ping / DERP</span>
+</button>
+<!-- Taildrop -->
+<button class="flex items-center gap-1.5 px-3 py-2 bg-[#252830] hover:bg-[#2e333d] border border-[#343a46] text-slate-200 rounded-xl text-xs font-semibold transition-colors">
+<span class="material-symbols-outlined text-[16px] text-emerald-400">send</span>
+<span>Send File (Taildrop)</span>
+</button>
+<!-- Caddy Special Badge action -->
+<button class="flex items-center gap-1.5 px-3 py-2 bg-[#2b271d] hover:bg-[#363022] border border-amber-600/40 text-amber-200 rounded-xl text-xs font-semibold transition-colors">
+<span class="material-symbols-outlined text-[16px] text-amber-300">sync_alt</span>
+<span>Configure Caddy</span>
+</button>
+<!-- Context overflow -->
+<button class="p-2 bg-[#252830] hover:bg-[#2e333d] border border-[#343a46] text-slate-300 rounded-xl transition-colors ml-auto">
+<span class="material-symbols-outlined text-[18px]">more_horiz</span>
+</button>
+</div>
+</div>
+<!-- 2. System & Connection Grid Details -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+<!-- Kernel & Environment -->
+<div class="bg-[#181a1f] border border-[#272b34] rounded-xl p-4 space-y-1 shadow-sm">
+<span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px] text-emerald-400">memory</span>
+            OS &amp; Platform
+          </span>
+<p class="text-xs font-semibold text-slate-200 pt-1">Linux 6.9.3-system76</p>
+<p class="text-[11px] text-slate-400">COSMIC Desktop Epoch 1 (libcosmic 0.1.0)</p>
+</div>
+<!-- WireGuard Connection Specs -->
+<div class="bg-[#181a1f] border border-[#272b34] rounded-xl p-4 space-y-1 shadow-sm">
+<span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px] text-emerald-400">wifi_channel</span>
+            Peer Endpoint
+          </span>
+<p class="text-xs font-mono font-semibold text-slate-200 pt-1">198.51.100.24:41641</p>
+<p class="text-[11px] text-slate-400">Direct WireGuard (p2p via disco punch)</p>
+</div>
+<!-- Key Life & Expiry -->
+<div class="bg-[#181a1f] border border-[#272b34] rounded-xl p-4 space-y-1 sm:col-span-2 lg:col-span-1 shadow-sm">
+<div class="flex items-center justify-between">
+<span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px] text-amber-300">vpn_key</span>
+              Machine Key
+            </span>
+<button class="text-[11px] text-emerald-400 font-bold hover:underline">Renew</button>
+</div>
+<p class="text-xs font-semibold text-slate-200 pt-1">Expires in 42 days</p>
+<p class="text-[11px] text-slate-400">Key valid until Oct 28, 2025</p>
+</div>
+</div>
+<!-- Capabilities strip -->
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+<div class="bg-[#181a1f] border border-[#272b34] rounded-xl p-3.5 flex items-center gap-3 shadow-sm">
+<div class="p-2 rounded-lg bg-[#22262f] border border-[#2f3542] text-emerald-400">
+<span class="material-symbols-outlined text-[20px]">terminal</span>
+</div>
+<div>
+<div class="flex items-center gap-1.5">
+<span class="text-xs font-bold text-slate-200">Tailscale SSH Enabled</span>
+<span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+</div>
+<p class="text-[11px] text-slate-400">Session recording active via tailnet ACLs</p>
+</div>
+</div>
+<div class="bg-[#181a1f] border border-[#272b34] rounded-xl p-3.5 flex items-center gap-3 shadow-sm">
+<div class="p-2 rounded-lg bg-[#22262f] border border-[#2f3542] text-emerald-400">
+<span class="material-symbols-outlined text-[20px]">traffic</span>
+</div>
+<div>
+<div class="flex items-center gap-1.5">
+<span class="text-xs font-bold text-slate-200">Exit Node Permitted</span>
+<span class="text-[10px] px-1.5 py-0.5 rounded bg-[#252932] font-mono text-slate-300 border border-[#323743]">0.0.0.0/0</span>
+</div>
+<p class="text-[11px] text-slate-400">Routes all client internet traffic when targeted</p>
+</div>
+</div>
+</div>
+<!-- 3. Caddy Reverse Proxy Extension Section -->
+<div class="bg-[#181a1f] border border-[#282c35] rounded-xl p-5 space-y-4 shadow-sm">
+<!-- Caddy Section Header -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#242831]">
+<div class="flex items-center gap-3">
+<div class="p-2 rounded-xl bg-[#232730] border border-[#313744] text-amber-300">
+<span class="material-symbols-outlined text-[22px]">swap_calls</span>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<h3 class="font-headline font-bold text-base text-slate-100">Caddy Server Manager</h3>
+<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                  Synced &amp; Running
+                </span>
+</div>
+<p class="text-xs text-slate-400">Admin API on <span class="font-mono text-slate-300">:2019</span> via local Tailscale UNIX socket tunnel</p>
+</div>
+</div>
+<!-- HTTPS Auto Badge -->
+<div class="flex items-center gap-1.5 bg-[#21242b] border border-[#2e333e] px-3 py-1.5 rounded-lg text-xs self-start sm:self-auto">
+<span class="material-symbols-outlined text-[16px] text-emerald-400">lock</span>
+<span class="text-slate-200 font-medium">Automatic HTTPS (*.ts.net)</span>
+</div>
+</div>
+<!-- Routes Table (libcosmic list view) -->
+<div class="space-y-2">
+<span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Forwarded Routes &amp; Virtual Hosts</span>
+<!-- Route 1 -->
+<div class="bg-[#20232a] border border-[#2c313c] rounded-xl p-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3 hover:bg-[#252932] hover:border-slate-600 transition-colors">
+<div class="space-y-1">
+<div class="flex items-center gap-2">
+<span class="font-mono text-xs font-bold text-slate-200">desktop-office.orca-cat.ts.net:8080</span>
+<span class="text-[10px] px-1.5 py-0.5 rounded bg-[#16181d] border border-[#2b303b] text-slate-400 font-medium">Tailnet Only</span>
+</div>
+<div class="flex items-center gap-1.5 text-xs text-slate-400">
+<span class="material-symbols-outlined text-[14px] text-slate-500">arrow_forward</span>
+<span class="font-mono text-slate-300">localhost:8080</span>
+<span class="opacity-40">•</span>
+<span>Nextcloud Hub Enterprise</span>
+</div>
+</div>
+<div class="flex items-center gap-2 self-end md:self-auto">
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/20 border border-emerald-500/40 text-emerald-300">HTTPS Active</span>
+<button class="p-1.5 rounded text-slate-400 hover:text-slate-100 hover:bg-[#2b303b] transition-colors" title="Settings">
+<span class="material-symbols-outlined text-[16px]">edit</span>
+</button>
+</div>
+</div>
+<!-- Route 2: Grafana Public Funnel -->
+<div class="bg-[#20232a] border border-[#2c313c] rounded-xl p-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3 hover:bg-[#252932] hover:border-slate-600 transition-colors">
+<div class="space-y-1">
+<div class="flex items-center gap-2">
+<span class="font-mono text-xs font-bold text-slate-200">grafana.orca-cat.ts.net:443</span>
+<span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-950/70 border border-amber-500/40 text-amber-300 font-bold">Public Funnel Active</span>
+</div>
+<div class="flex items-center gap-1.5 text-xs text-slate-400">
+<span class="material-symbols-outlined text-[14px] text-slate-500">arrow_forward</span>
+<span class="font-mono text-slate-300">localhost:3000</span>
+<span class="opacity-40">•</span>
+<span>Grafana Observability Stack</span>
+</div>
+</div>
+<div class="flex items-center gap-2 self-end md:self-auto">
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/20 border border-emerald-500/40 text-emerald-300">Valid Cert</span>
+<button class="p-1.5 rounded text-slate-400 hover:text-slate-100 hover:bg-[#2b303b] transition-colors" title="Settings">
+<span class="material-symbols-outlined text-[16px]">edit</span>
+</button>
+</div>
+</div>
+<!-- Route 3: UNIX socket proxy -->
+<div class="bg-[#20232a] border border-[#2c313c] rounded-xl p-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3 hover:bg-[#252932] hover:border-slate-600 transition-colors">
+<div class="space-y-1">
+<div class="flex items-center gap-2">
+<span class="font-mono text-xs font-bold text-slate-200">api.orca-cat.ts.net</span>
+<span class="text-[10px] px-1.5 py-0.5 rounded bg-[#16181d] border border-[#2b303b] text-slate-400 font-medium">Tailnet Only</span>
+</div>
+<div class="flex items-center gap-1.5 text-xs text-slate-400">
+<span class="material-symbols-outlined text-[14px] text-slate-500">arrow_forward</span>
+<span class="font-mono text-slate-300">unix:/run/app.sock</span>
+<span class="opacity-40">•</span>
+<span>FastAPI Service</span>
+</div>
+</div>
+<div class="flex items-center gap-2 self-end md:self-auto">
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/20 border border-emerald-500/40 text-emerald-300">HTTPS Active</span>
+<button class="p-1.5 rounded text-slate-400 hover:text-slate-100 hover:bg-[#2b303b] transition-colors" title="Settings">
+<span class="material-symbols-outlined text-[16px]">edit</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Caddy Action Footbar -->
+<div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+<button class="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[16px]">add</span>
+<span>Add Reverse Proxy Route</span>
+</button>
+<div class="flex items-center gap-2">
+<button class="flex items-center gap-1.5 px-3 py-1.5 bg-[#232730] border border-[#313744] text-slate-200 rounded-lg text-xs font-medium hover:bg-[#2c323e] transition-colors">
+<span class="material-symbols-outlined text-[15px] text-amber-300">folder_zip</span>
+<span>Push /var/www via Taildrop</span>
+</button>
+<button class="flex items-center gap-1.5 px-3 py-1.5 bg-[#232730] border border-[#313744] text-slate-200 rounded-lg text-xs font-medium hover:bg-[#2c323e] transition-colors">
+<span class="material-symbols-outlined text-[15px] text-slate-400">list_alt</span>
+<span>View Caddy Logs</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script>
+  (function() {
+    const toggleBtn = document.getElementById('toggle-flyout-btn');
+    const flyout = document.getElementById('cosmic-flyout');
+    if (toggleBtn && flyout) {
+      toggleBtn.addEventListener('click', function() {
+        flyout.classList.toggle('hidden');
+      });
+    }
+
+    const filterInput = document.getElementById('machine-filter');
+    if (filterInput) {
+      document.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+          e.preventDefault();
+          filterInput.focus();
+        }
+      });
+    }
+  })();
+</script></main></div><footer class="h-8 bg-[#141619] border-t border-[#242830] px-4 flex items-center justify-between text-xs text-slate-400 select-none"><div class="flex items-center gap-4"><span>Tailscale 1.58.2</span><span>Backend: <span class="text-emerald-400">running</span></span><span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>DERP: fra (Frankfurt)</span></div><div class="flex items-center gap-3 font-mono text-[11px] text-slate-400"><span>In: 1.2 MB/s</span><span>Out: 480 KB/s</span></div></footer></div></div></div></body></html>

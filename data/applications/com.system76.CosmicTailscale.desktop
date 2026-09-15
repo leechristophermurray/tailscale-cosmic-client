@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Tailscale
+GenericName=Tailnet Manager
+Comment=Manage your tailnet, exit nodes, and Taildrop transfers
+Exec=cosmic-tailscale
+Icon=com.system76.CosmicTailscale-symbolic
+Terminal=false
+Categories=Network;COSMIC;
+Keywords=COSMIC;Tailscale;VPN;Tailnet;WireGuard;Mesh;Taildrop;
+StartupNotify=true
+StartupWMClass=com.system76.CosmicTailscale

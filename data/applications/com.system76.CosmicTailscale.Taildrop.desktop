@@ -1,0 +1,17 @@
+[Desktop Entry]
+Type=Application
+Name=Send via Taildrop…
+Comment=Send the selected files to a machine on your tailnet
+Exec=cosmic-tailscale --send %F
+Icon=com.system76.CosmicTailscale-symbolic
+Terminal=false
+NoDisplay=true
+Categories=Network;
+Keywords=Taildrop;Tailscale;Send;Share;
+StartupNotify=true
+StartupWMClass=com.system76.CosmicTailscale
+# There is no cross-desktop MIME type meaning "any file" — `all/all` is a KDE
+# convention that update-desktop-database discards, registering nothing at all.
+# This is a broad list of what people actually send instead, with
+# application/octet-stream catching most otherwise-unrecognised binaries.
+MimeType=application/octet-stream;application/pdf;application/zip;application/gzip;application/x-tar;application/x-xz;application/x-bzip2;application/x-7z-compressed;application/vnd.rar;application/json;application/xml;application/epub+zip;application/vnd.openxmlformats-officedocument.wordprocessingml.document;application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;application/vnd.openxmlformats-officedocument.presentationml.presentation;application/vnd.oasis.opendocument.text;application/vnd.oasis.opendocument.spreadsheet;application/vnd.oasis.opendocument.presentation;text/plain;text/csv;text/markdown;text/html;text/x-log;image/png;image/jpeg;image/gif;image/webp;image/svg+xml;image/tiff;image/bmp;image/heif;audio/mpeg;audio/flac;audio/ogg;audio/x-wav;video/mp4;video/x-matroska;video/webm;video/quicktime;
