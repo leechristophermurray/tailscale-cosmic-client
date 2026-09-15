@@ -64,15 +64,15 @@ mod tests {
     fn every_icon_state_resolves() {
         for (name, stock) in [
             (
-                "com.system76.CosmicAppletTailscale-connected-symbolic",
+                "io.github.leechristophermurray.CosmicAppletTailscale-connected-symbolic",
                 "network-transmit-receive-symbolic",
             ),
             (
-                "com.system76.CosmicAppletTailscale-disconnected-symbolic",
+                "io.github.leechristophermurray.CosmicAppletTailscale-disconnected-symbolic",
                 "network-wired-disconnected-symbolic",
             ),
             (
-                "com.system76.CosmicAppletTailscale-exitnode-symbolic",
+                "io.github.leechristophermurray.CosmicAppletTailscale-exitnode-symbolic",
                 "security-high-symbolic",
             ),
         ] {

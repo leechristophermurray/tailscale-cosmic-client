@@ -26,6 +26,6 @@ pub use client::{AuthResponse, BeszelHub, HubInfo};
 pub use deploy::{AgentInstall, DEFAULT_AGENT_PORT, InstallOutcome};
 pub use error::{Error, Result};
 pub use model::{
-    ContainerStats, Info, Stats, StatsPeriod, SystemRecord, SystemStatus, ZfsPool,
-    stats::StatsRecord,
+    AlertEvent, AlertHistoryRecord, AlertKind, AlertTracker, ContainerStats, Info, Stats,
+    StatsPeriod, SystemRecord, SystemStatus, ZfsPool, stats::StatsRecord,
 };

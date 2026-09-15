@@ -32,9 +32,10 @@ pub enum Message {
     // ---- monitoring --------------------------------------------------------
     /// `None` means no hub is configured or it could not be read; the panel
     /// simply shows nothing in that case.
-    MonitoringLoaded(Option<Arc<Vec<beszel_client::SystemRecord>>>),
+    MonitoringLoaded(Option<Arc<super::monitoring::Snapshot>>),
     MonitoringRefresh,
     /// Pin this machine's metrics to the panel, by Beszel record id.
     PinSystem(String),
     UnpinSystem,
+    Noop,
 }

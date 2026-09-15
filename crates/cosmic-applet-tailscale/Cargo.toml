@@ -11,6 +11,7 @@ tailscale-localapi.workspace = true
 beszel-client.workspace = true
 libcosmic = { workspace = true, features = ["applet", "applet-token", "tokio", "a11y", "dbus-config", "wgpu"] }
 keyring.workspace = true
+notify-rust.workspace = true
 tokio.workspace = true
 futures-util.workspace = true
 tracing.workspace = true

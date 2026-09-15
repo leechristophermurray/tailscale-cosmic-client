@@ -29,7 +29,7 @@ use crate::fl;
 
 use message::Message;
 
-const ID: &str = "com.system76.CosmicAppletTailscale";
+const ID: &str = "io.github.leechristophermurray.CosmicAppletTailscale";
 
 /// How long "suspend" keeps the tunnel down.
 const SUSPEND_DURATION: Duration = Duration::from_secs(60 * 60);
@@ -97,21 +97,21 @@ impl IconState {
         let (name, stock) = match self {
             // Hollow rings read as "off".
             Self::Disconnected => (
-                "com.system76.CosmicAppletTailscale-disconnected-symbolic",
+                "io.github.leechristophermurray.CosmicAppletTailscale-disconnected-symbolic",
                 "network-wired-disconnected-symbolic",
             ),
             Self::Pending => (
-                "com.system76.CosmicAppletTailscale-disconnected-symbolic",
+                "io.github.leechristophermurray.CosmicAppletTailscale-disconnected-symbolic",
                 "network-wired-acquiring-symbolic",
             ),
             // The full solid mark.
             Self::Connected => (
-                "com.system76.CosmicAppletTailscale-connected-symbolic",
+                "io.github.leechristophermurray.CosmicAppletTailscale-connected-symbolic",
                 "network-transmit-receive-symbolic",
             ),
             // A shield says traffic is leaving through somewhere else.
             Self::ExitNode => (
-                "com.system76.CosmicAppletTailscale-exitnode-symbolic",
+                "io.github.leechristophermurray.CosmicAppletTailscale-exitnode-symbolic",
                 "security-high-symbolic",
             ),
         };
@@ -385,10 +385,10 @@ impl cosmic::Application for Applet {
                 ]);
             }
 
-            Message::MonitoringLoaded(systems) => {
-                self.monitoring.configured = systems.is_some();
-                if let Some(systems) = systems {
-                    self.monitoring.systems = (*systems).clone();
+            Message::MonitoringLoaded(snapshot) => {
+                self.monitoring.configured = snapshot.is_some();
+                if let Some(snapshot) = snapshot {
+                    self.monitoring.systems.clone_from(&snapshot.systems);
 
                     // A pinned machine the hub no longer monitors would leave a
                     // stale number in the panel forever.
@@ -397,8 +397,21 @@ impl cosmic::Application for Applet {
                     {
                         self.monitoring.pinned = None;
                     }
+
+                    // Always observed, so muting and unmuting does not replay
+                    // what happened while muted.
+                    let events = self.monitoring.alert_events(&snapshot);
+                    if snapshot.notify {
+                        let notifications = events
+                            .iter()
+                            .map(|event| monitoring::alert_notification(event, &snapshot.systems))
+                            .collect();
+                        return monitoring::notify(notifications);
+                    }
                 }
             }
+
+            Message::Noop => {}
 
             Message::PinSystem(id) => self.monitoring.pinned = Some(id),
             Message::UnpinSystem => self.monitoring.pinned = None,
@@ -521,6 +534,17 @@ mod tests {
     use super::*;
     use cosmic::Application as _;
 
+    /// Fluent isolates each inserted value with bidi marks, so a right-to-left
+    /// machine name cannot reorder the sentence around it. Compare without them.
+    fn plain(text: &str) -> String {
+        text.replace(['\u{2068}', '\u{2069}'], "")
+    }
+
+    /// Whether an update started any work, such as a notification.
+    fn started(task: &cosmic::app::Task<Message>) -> bool {
+        task.units() > 0
+    }
+
     fn applet() -> Applet {
         Applet {
             core: Core::default(),
@@ -549,8 +573,25 @@ mod tests {
         Arc::new(serde_json::from_str(json).expect("prefs decode"))
     }
 
-    fn systems(json: &str) -> Arc<Vec<beszel_client::SystemRecord>> {
-        Arc::new(serde_json::from_str(json).expect("systems decode"))
+    fn systems(json: &str) -> Arc<monitoring::Snapshot> {
+        snapshot(json, None, true)
+    }
+
+    fn snapshot(systems: &str, alerts: Option<&str>, notify: bool) -> Arc<monitoring::Snapshot> {
+        Arc::new(monitoring::Snapshot {
+            systems: serde_json::from_str(systems).expect("systems decode"),
+            alerts: alerts.map(|json| serde_json::from_str(json).expect("alerts decode")),
+            hub: "you@https://mon.example.com".to_string(),
+            notify,
+        })
+    }
+
+    fn history(resolved: &str) -> String {
+        format!(
+            r#"[{{"id":"h1","system":"s1","alert_id":"a1","name":"Disk","value":80,
+                 "created":"2026-09-15 08:12:03.200Z","resolved":"{resolved}",
+                 "expand":{{"system":{{"name":"homeforge"}}}}}}]"#
+        )
     }
 
     // ---- the panel icon --------------------------------------------------------
@@ -813,5 +854,124 @@ mod tests {
             ..applet()
         };
         let _ = popup::view(&suspended);
+    }
+
+    // ---- alert notifications ------------------------------------------------
+
+    #[test]
+    fn a_new_alert_notifies_once_and_its_resolution_notifies_once() {
+        let mut applet = applet();
+        // First read: whatever is already firing is not news.
+        assert!(!started(&applet.update(Message::MonitoringLoaded(Some(
+            snapshot(TWO, Some("[]"), true)
+        )))));
+
+        let fired = history("");
+        assert!(started(&applet.update(Message::MonitoringLoaded(Some(
+            snapshot(TWO, Some(&fired), true)
+        )))));
+        assert!(!started(&applet.update(Message::MonitoringLoaded(Some(
+            snapshot(TWO, Some(&fired), true)
+        )))));
+
+        let cleared = history("2026-09-15 09:00:00.000Z");
+        assert!(started(&applet.update(Message::MonitoringLoaded(Some(
+            snapshot(TWO, Some(&cleared), true)
+        )))));
+    }
+
+    #[test]
+    fn muted_alerts_are_still_tracked_so_unmuting_does_not_replay_them() {
+        let mut applet = applet();
+        let _ = applet.update(Message::MonitoringLoaded(Some(snapshot(
+            TWO,
+            Some("[]"),
+            true,
+        ))));
+
+        let fired = history("");
+        assert!(!started(&applet.update(Message::MonitoringLoaded(Some(
+            snapshot(TWO, Some(&fired), false)
+        )))));
+        assert!(!started(&applet.update(Message::MonitoringLoaded(Some(
+            snapshot(TWO, Some(&fired), true)
+        )))));
+    }
+
+    #[test]
+    fn a_hub_without_alert_history_still_shows_its_machines() {
+        let mut applet = applet();
+        let task = applet.update(Message::MonitoringLoaded(Some(snapshot(TWO, None, true))));
+        assert!(!started(&task));
+        assert_eq!(applet.monitoring.systems.len(), 2);
+    }
+
+    fn event(
+        fired: bool,
+        name: &str,
+        value: f64,
+        system_name: Option<&str>,
+    ) -> beszel_client::AlertEvent {
+        let mut json = serde_json::json!({
+            "id": "h1", "system": "s1", "name": name, "value": value, "resolved": if fired { "" } else { "2026-09-15 09:00:00.000Z" }
+        });
+        if let Some(name) = system_name {
+            json["expand"] = serde_json::json!({"system": {"name": name}});
+        }
+        let record: beszel_client::AlertHistoryRecord = serde_json::from_value(json).unwrap();
+        if fired {
+            beszel_client::AlertEvent::Fired(record)
+        } else {
+            beszel_client::AlertEvent::Resolved(record)
+        }
+    }
+
+    #[test]
+    fn notifications_name_the_machine_the_metric_and_the_threshold() {
+        let n = monitoring::alert_notification(&event(true, "Disk", 80.0, Some("homeforge")), &[]);
+        assert_eq!(plain(&n.summary), "Alert on homeforge");
+        assert_eq!(plain(&n.body), "Disk usage is above 80%");
+        assert!(!n.urgent);
+
+        let n = monitoring::alert_notification(
+            &event(false, "Temperature", 72.5, Some("homeforge")),
+            &[],
+        );
+        assert_eq!(plain(&n.summary), "Alert cleared on homeforge");
+        assert_eq!(plain(&n.body), "Temperature is back below 72.5°C");
+
+        let n =
+            monitoring::alert_notification(&event(true, "LoadAvg5", 4.0, Some("homeforge")), &[]);
+        assert_eq!(plain(&n.body), "5-minute load average is above 4");
+    }
+
+    #[test]
+    fn a_machine_going_down_is_urgent_and_battery_alerts_read_the_right_way_round() {
+        let down =
+            monitoring::alert_notification(&event(true, "Status", 0.0, Some("homelab")), &[]);
+        assert_eq!(
+            plain(&down.body),
+            "homelab has stopped reporting to the hub"
+        );
+        assert!(down.urgent);
+
+        let up = monitoring::alert_notification(&event(false, "Status", 0.0, Some("homelab")), &[]);
+        assert!(!up.urgent);
+
+        let battery =
+            monitoring::alert_notification(&event(true, "Battery", 20.0, Some("laptop")), &[]);
+        assert_eq!(plain(&battery.body), "Battery is below 20%");
+    }
+
+    #[test]
+    fn without_an_expanded_name_the_machine_is_found_in_the_systems_list() {
+        let systems: Vec<beszel_client::SystemRecord> = serde_json::from_str(TWO).unwrap();
+        let first = systems[0].clone();
+        let mut json = serde_json::json!({"id":"h1","system": first.id, "name":"CPU","value":90,"resolved":""});
+        json["expand"] = serde_json::json!({});
+        let record: beszel_client::AlertHistoryRecord = serde_json::from_value(json).unwrap();
+
+        let n = monitoring::alert_notification(&beszel_client::AlertEvent::Fired(record), &systems);
+        assert_eq!(plain(&n.summary), format!("Alert on {}", first.name));
     }
 }

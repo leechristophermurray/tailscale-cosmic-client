@@ -41,3 +41,5 @@ pub const WARNING: &str = "dialog-warning-symbolic";
 pub const ADD: &str = "list-add-symbolic";
 pub const FORWARD: &str = "go-next-symbolic";
 pub const ACCOUNT: &str = "user-info-symbolic";
+pub const FOLDER_REMOTE: &str = "folder-remote-symbolic";
+pub const EJECT: &str = "media-eject-symbolic";

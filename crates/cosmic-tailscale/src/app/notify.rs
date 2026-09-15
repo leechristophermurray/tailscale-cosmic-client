@@ -16,8 +16,8 @@ use crate::fl;
 
 /// Matches the desktop entry, so the notification carries the app's icon and
 /// the shell can group it with the application.
-const APP_ID: &str = "com.system76.CosmicTailscale";
-const ICON: &str = "com.system76.CosmicTailscale-symbolic";
+const APP_ID: &str = "io.github.leechristophermurray.CosmicTailscale";
+const ICON: &str = "io.github.leechristophermurray.CosmicTailscale-symbolic";
 
 /// Where received files are written.
 fn download_dir() -> PathBuf {

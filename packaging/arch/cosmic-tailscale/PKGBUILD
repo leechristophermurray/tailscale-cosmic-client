@@ -1,0 +1,47 @@
+# Maintainer: Christopher Murray <lee.christopher.murray@gmail.com>
+#
+# Built from the tagged source. The release workflow fills in pkgver and
+# sha256sums before publishing to the AUR.
+
+pkgname=cosmic-tailscale
+pkgver=0.1.0
+pkgrel=1
+pkgdesc='Tailscale client and panel applet for the COSMIC desktop'
+arch=('x86_64')
+url='https://github.com/leechristophermurray/tailscale-cosmic-client'
+license=('MPL-2.0')
+# wayland is loaded with dlopen, so namcap cannot see it.
+depends=('gcc-libs' 'glibc' 'libxkbcommon' 'wayland')
+makedepends=('cargo' 'cmake')
+optdepends=('tailscale: the daemon this client manages'
+            'cosmic-terminal: open Tailscale SSH sessions'
+            'cosmic-files: browse mounted machines'
+            'gvfs: mount machines over SFTP'
+            'openssh: mount machines over SFTP')
+provides=("$pkgname")
+conflicts=("$pkgname-bin")
+# makepkg's LTO flags are for C; Rust does its own.
+options=('!lto')
+source=("$pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz")
+sha256sums=('SKIP')
+
+_srcdir="tailscale-cosmic-client-$pkgver"
+
+prepare() {
+    cd "$_srcdir"
+    export RUSTUP_TOOLCHAIN=stable
+    cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
+}
+
+build() {
+    cd "$_srcdir"
+    export RUSTUP_TOOLCHAIN=stable
+    export CARGO_TARGET_DIR=target
+    cargo build --frozen --release
+}
+
+package() {
+    cd "$_srcdir"
+    ./scripts/install.sh --prefix /usr --destdir "$pkgdir" --bin-dir target/release
+    install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

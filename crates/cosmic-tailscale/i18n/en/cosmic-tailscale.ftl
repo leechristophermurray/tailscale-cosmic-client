@@ -371,3 +371,26 @@ beszel-temp-caption = Hottest: { $sensor } at { $celsius }°C, with { $others } 
 
 taildrop-machine-gone = That machine is no longer on your tailnet. Your files are still queued — choose another.
 caddy-machine-gone = The machine you last managed is no longer on your tailnet. Pick another.
+
+## Remote files
+
+files-heading = Files
+files-user = SSH user
+files-mount = Mount
+files-mounting = Mounting…
+files-unmount = Unmount
+files-unmounting = Unmounting…
+files-open = Open in Files
+files-mounted-at = Mounted at { $location }
+files-mount-detail = Mounts your home directory on this machine over SFTP, so it opens in COSMIC Files. Needs an SSH key or Tailscale SSH.
+files-open-hint = Double-click to open this machine's files
+files-machine-gone = That machine is no longer on your tailnet.
+files-no-address = { $name } has no address to connect to.
+files-system-not-on-tailnet = { $name } does not match a machine on your tailnet, so its files cannot be opened.
+notice-mounted = Mounted { $host }
+notice-unmounted = Unmounted { $host }
+
+## Hub alert notifications
+
+beszel-alert-notifications = Notify me about alerts
+beszel-alert-notifications-detail = The panel applet shows a notification when an alert you set in Beszel fires or clears. Alerts are set up in the hub's web interface.

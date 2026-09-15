@@ -12,6 +12,14 @@ const SYSTEMS: &str = r#"{"page":1,"perPage":500,"totalItems":1,"items":[
   {"id":"abc","name":"homeforge","host":"100.64.0.1","port":"45876","status":"up",
    "info":{"cpu":18.2,"mp":15.2,"dp":64.8,"v":"0.18.7"}}]}"#;
 
+const ALERT_HISTORY: &str = r#"{"page":1,"perPage":20,"totalItems":2,"items":[
+  {"id":"h2","system":"abc","alert_id":"a2","name":"Status","value":0,
+   "created":"2026-09-15 09:00:00.000Z","resolved":"",
+   "expand":{"system":{"id":"abc","name":"homeforge"}}},
+  {"id":"h1","system":"abc","alert_id":"a1","name":"Disk","value":80,
+   "created":"2026-09-15 08:00:00.000Z","resolved":"2026-09-15 08:30:00.000Z",
+   "expand":{"system":{"id":"abc","name":"homeforge"}}}]}"#;
+
 const AUTH: &str = r#"{"token":"tok-123","record":{"id":"u1","email":"you@example.com"}}"#;
 
 /// A hub that accepts one account and demands its token on everything else.
@@ -31,6 +39,7 @@ async fn hub() -> Stub {
             Reply::json(401, r#"{"message":"The request requires valid record authorization token."}"#)
         }
         "/api/collections/systems/records" => Reply::json(200, SYSTEMS),
+        "/api/collections/alerts_history/records" => Reply::json(200, ALERT_HISTORY),
         "/api/beszel/info" => Reply::json(200, r#"{"key":"ssh-ed25519 AAAA","v":"0.18.7"}"#),
         "/api/collections/system_stats/records" => Reply::json(
             200,
@@ -252,4 +261,30 @@ async fn a_trailing_slash_in_the_address_is_tolerated() {
         .await
         .expect("healthy");
     assert_eq!(stub.only_request().path(), "/api/health");
+}
+
+/// Alert history is only readable as a list, newest first, and the system name
+/// has to be asked for with `expand`; without it a notification could only name
+/// a record id.
+#[tokio::test]
+async fn alert_history_is_listed_newest_first_with_system_names() {
+    let stub = hub().await;
+    let hub = BeszelHub::new(stub.url()).unwrap().with_token("tok-123");
+
+    let history = hub.alert_history(20).await.unwrap();
+    assert_eq!(history.len(), 2);
+    assert!(history[0].is_active());
+    assert_eq!(history[0].system_name(), Some("homeforge"));
+    assert!(!history[1].is_active());
+
+    let request = &stub.requests()[0];
+    assert_eq!(request.path(), "/api/collections/alerts_history/records");
+    for part in ["sort=-created", "perPage=20", "expand=system"] {
+        assert!(
+            request.target.contains(part),
+            "{} lacks {part}",
+            request.target
+        );
+    }
+    assert_eq!(request.header("authorization"), Some("tok-123"));
 }

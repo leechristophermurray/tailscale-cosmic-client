@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop-application">
-  <id>com.system76.CosmicTailscale</id>
+  <id>io.github.leechristophermurray.CosmicTailscale</id>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>MPL-2.0</project_license>
   <name>Tailscale</name>
@@ -21,12 +21,14 @@
     </ul>
   </description>
 
-  <launchable type="desktop-id">com.system76.CosmicTailscale.desktop</launchable>
+  <launchable type="desktop-id">io.github.leechristophermurray.CosmicTailscale.desktop</launchable>
 
-  <!-- Add <url type="homepage"> when this is published somewhere. -->
+  <url type="homepage">https://github.com/leechristophermurray/tailscale-cosmic-client</url>
+  <url type="bugtracker">https://github.com/leechristophermurray/tailscale-cosmic-client/issues</url>
+  <url type="vcs-browser">https://github.com/leechristophermurray/tailscale-cosmic-client</url>
 
-  <developer id="com.system76">
-    <name>System76</name>
+  <developer id="io.github.leechristophermurray">
+    <name>Christopher Murray</name>
   </developer>
 
   <!-- Nothing in this application is age-restricted; it manages a VPN. -->

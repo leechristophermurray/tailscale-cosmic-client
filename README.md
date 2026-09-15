@@ -69,6 +69,52 @@ them testable without a compositor and usable from anything else.
 That list is complete: it is what a bare `ubuntu:24.04` container needed to
 build the workspace. Everything else, Wayland included, is loaded at runtime.
 
+## Install
+
+Packages install the app, the panel applet and the "Send via Taildrop…" action.
+None of them installs Tailscale itself, which comes from
+[Tailscale's own repositories](https://tailscale.com/download/linux) so that the
+daemon keeps receiving its security updates. `install-tailscale.sh` in this
+repository (or `just tailscale`) sets it up, including the operator step
+described under [Build and install](#build-and-install).
+
+### Pop!_OS, Ubuntu and Debian
+
+For Pop!_OS 24.04, Ubuntu 24.04 or later, and Debian 13 or later, on x86_64:
+
+```sh
+sudo curl -fsSLo /usr/share/keyrings/cosmic-tailscale-archive-keyring.gpg \
+  https://leechristophermurray.github.io/tailscale-cosmic-client/cosmic-tailscale-archive-keyring.gpg
+sudo curl -fsSLo /etc/apt/sources.list.d/cosmic-tailscale.sources \
+  https://leechristophermurray.github.io/tailscale-cosmic-client/cosmic-tailscale.sources
+sudo apt update
+sudo apt install cosmic-tailscale
+```
+
+### Fedora
+
+```sh
+sudo dnf copr enable leechristophermurray/cosmic-tailscale
+sudo dnf install cosmic-tailscale
+```
+
+### Arch Linux
+
+From the AUR, built from source or prebuilt:
+
+```sh
+paru -S cosmic-tailscale      # or: paru -S cosmic-tailscale-bin
+```
+
+### After installing
+
+Add the applet in **Settings ▸ Desktop ▸ Panel ▸ Configure panel applets**.
+
+Builds from before the app ID changed used `com.system76.CosmicTailscale`. The window
+carries their settings and saved Beszel password over on its first launch, and
+installing removes the old desktop entries, but the panel still lists the applet
+under its old ID: remove it there and add it again.
+
 ## Build and install
 
 On a new machine, one command sets up Tailscale and installs the app:
@@ -183,7 +229,8 @@ right of the screenshot above, holds what you reach for in passing:
 - recent peers, each copied to the clipboard with a click;
 - with a Beszel hub configured, a monitoring summary that names any unhealthy
   machine and lists each one's CPU and memory; **pin** one to show its busier
-  figure beside the panel icon;
+  figure beside the panel icon, and desktop notifications when a hub alert
+  fires or clears;
 - **Open Tailscale…**, **Suspend for 1 hour** and **Admin console**.
 
 Suspending turns the tunnel off and back on after an hour, unless you reconnect
@@ -214,6 +261,31 @@ terminal**, which opens `tailscale ssh` in `cosmic-term`. Authentication comes
 from your tailnet identity, so there are no keys to distribute. Status cards
 cover the platform, the peer endpoint, key expiry, and whether the machine
 accepts Tailscale SSH or offers itself as an exit node.
+
+#### Files
+
+**Mount** makes another machine's home directory a location in COSMIC Files,
+through GVfs — the same `gio mount sftp://user@host/` that Files' own
+**Connect to server** uses, so the mount is visible to every GIO application and
+stays until it is unmounted. Enter the SSH user once; it is remembered per
+machine and defaults to your local user name. Once mounted, **Open in Files**
+opens the remote home directory and **Unmount** ends the mount. A machine
+mounted from Files instead is recognised too, by its MagicDNS name or address.
+
+Some details:
+
+- GVfs runs `ssh` non-interactively, so it can neither accept a new host key nor
+  ask for a password. Mounting therefore starts with a short `ssh` login that
+  records the host key (the WireGuard link has already authenticated the node)
+  and reports a refused login in plain words before GVfs is involved. The login
+  itself needs an SSH key or Tailscale SSH; password-only servers are not
+  supported.
+- The home directory is whatever the SFTP server reports, which GVfs records as
+  the mount's default location, rather than an assumed `/home/<user>`.
+- Machines are mounted by MagicDNS name when this machine uses MagicDNS, and by
+  Tailscale IPv4 address otherwise. Phones and tablets are not offered a mount.
+- Needs `gio` (from glib), GVfs's SFTP backend, and an SSH client — installed
+  with COSMIC on most systems, and recommended by every package.
 
 ### Exit nodes
 
@@ -273,7 +345,25 @@ per-container stats. The hub never needs to be on the public internet.
 
 Pick a monitored machine to see its summary cards and history. Memory is split
 into used and reclaimable, load is set against the thread count, and the sensors
-row highlights the hottest reading.
+row highlights the hottest reading. Double-click the **Disk** card, or the Disk
+or Disk I/O chart title, to open that machine in COSMIC Files — mounting it
+first, as described under [Files](#files), if it is not mounted already.
+
+**Alert notifications.** Alerts set in the hub's web interface — CPU, memory,
+disk, temperature, load, bandwidth, GPU, battery, or a machine going down —
+arrive as desktop notifications when they fire and when they clear, with a
+machine going down marked urgent. A switch on this page turns them off.
+
+- They are sent by the panel applet, which runs for the whole session, rather
+  than by this window, which may be closed; so the applet has to be on the
+  panel.
+- The applet reads the hub's alert history each minute. Alerts already firing
+  when it starts are not announced, and more than three changes at once arrive
+  as one notification.
+- The hub records each alert's threshold, not the reading that crossed it, nor
+  which disk or sensor did, so a notification says "Disk usage is above 80%"
+  rather than naming a figure it does not have.
+- Needs Beszel 0.12 or later, which introduced the alert history.
 
 Beszel's records use very short keys — memory percent is `mp`, temperatures are
 `t` — because they are written per machine per interval and kept for months. Two
@@ -424,6 +514,9 @@ tests about a third of the time.
 
 Still untested: `view` code outside the pages, chart drawing (canvas `draw`
 only runs with a renderer), subscriptions, the keyring, and notifications.
+Mounting is tested against stand-in `gio` and `ssh` scripts, whose output
+follows glib's `gio mount` source, and alert tracking against Beszel's schema;
+neither has been run against a real SSH server or hub alert.
 Wayland drag-and-drop and the applet inside a real `cosmic-panel` can only be
 checked by hand.
 
@@ -462,7 +555,13 @@ it but cannot alter what `main` builds from.
 
 ### Releasing
 
-1. Bump `version` under `[workspace.package]` in `Cargo.toml`, and commit.
+1. Set the new version in each place that records it, and commit:
+   - `version` under `[workspace.package]` in `Cargo.toml`
+   - `Version:` and a new `%changelog` entry in `packaging/rpm/cosmic-tailscale.spec`
+   - `pkgver=` in both `packaging/arch/*/PKGBUILD`
+   - a new `<release>` in the metainfo
+
+   `scripts/check-versions.sh` confirms they agree; CI runs it on every push.
 2. Tag it and push the tag:
 
    ```sh
@@ -470,12 +569,83 @@ it but cannot alter what `main` builds from.
    git push origin v0.2.0
    ```
 
-`.github/workflows/release.yml` then checks that the tag matches the version in
-`Cargo.toml`, runs the whole of CI against the tagged commit, verifies the
-tarball's checksum, and publishes a GitHub release with it and generated notes.
-A tag with a suffix, such as `v0.2.0-rc.1`, becomes a pre-release. The publish
-job is the only one with write access to the repository, and it builds nothing:
-it ships the tarball that CI built and tested in the same run.
+`.github/workflows/release.yml` then:
+
+1. checks that the tag matches every recorded version;
+2. runs the whole of CI against the tagged commit;
+3. publishes a GitHub release with the tarball, the `.deb`, their checksums and
+   generated notes;
+4. publishes to each distribution channel below that has been set up.
+
+A tag with a suffix, such as `v0.2.0-rc.1`, becomes a pre-release, and is left out
+of the apt repository. The publish job is the only one with write access to the
+repository, and it builds nothing: it ships what CI built and tested in the same
+run.
+
+### Distribution channels
+
+Every package installs through `scripts/install.sh`, so each one lays out exactly
+the files `scripts/test-install.sh` checks.
+
+| Channel | Compiled by | From |
+| --- | --- | --- |
+| apt (GitHub Pages) | CI, on Ubuntu 24.04 | the release binaries |
+| Fedora COPR | COPR's builders | the tagged source, via `.copr/Makefile` |
+| AUR `cosmic-tailscale` | the installing machine | the tagged source |
+| AUR `cosmic-tailscale-bin` | CI | the release tarball |
+
+Each channel needs a one-time setup. Until then its release job skips itself with
+a notice, rather than failing the release.
+
+**Apt repository.**
+
+1. In **Settings ▸ Pages**, set the source to **GitHub Actions**.
+2. In **Settings ▸ Environments ▸ github-pages**, add a deployment tag rule for
+   `v*`. By default only `main` may deploy, and releases run from tags.
+3. Create a signing key on a machine you trust, and keep a backup of it offline:
+
+   ```sh
+   gpg --quick-gen-key "cosmic-tailscale apt signing <you@example.com>" ed25519 sign 3y
+   gpg --armor --export-secret-keys <fingerprint>
+   ```
+
+4. Store the exported private key as the repository secret `APT_SIGNING_KEY`, and
+   its passphrase, if it has one, as `APT_SIGNING_PASSPHRASE`.
+
+The workflow publishes the matching public key beside the repository. Before the
+key expires, extend it and update the secret. Users have to fetch the keyring
+file again to see the new expiry date, so announce it in the release notes.
+
+**Fedora COPR.**
+
+1. Sign in to <https://copr.fedorainfracloud.org> with a Fedora account.
+2. Create the project with network access enabled. The build fetches crates and
+   libcosmic from the network:
+
+   ```sh
+   copr-cli create cosmic-tailscale --enable-net on \
+     --chroot fedora-43-x86_64 --chroot fedora-44-x86_64 --chroot fedora-rawhide-x86_64
+   ```
+
+3. Copy the API token from <https://copr.fedorainfracloud.org/api/> (the contents
+   of `~/.config/copr`) into the secret `COPR_CONFIG`.
+4. Set the repository variable `COPR_PROJECT` to `<fedora-account>/cosmic-tailscale`.
+
+The install command above assumes that account is `leechristophermurray`.
+
+**AUR.**
+
+1. Create an account at <https://aur.archlinux.org>.
+2. Make a key for publishing only, and add `aur_deploy.pub` to the account:
+
+   ```sh
+   ssh-keygen -t ed25519 -f aur_deploy -N "" -C "cosmic-tailscale AUR deploy"
+   ```
+
+3. Store the private key `aur_deploy` as the secret `AUR_SSH_PRIVATE_KEY`.
+
+The first release creates both AUR packages. AUR's host keys are pinned in
+`packaging/arch/aur_known_hosts`, checked against the fingerprints AUR publishes.
 
 ## License
 

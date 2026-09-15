@@ -84,15 +84,17 @@ jobs:
         with:
           persist-credentials: false
       - name: Install linters
-        run: dnf install -y -q ShellCheck desktop-file-utils appstream findutils diffutils tar gzip util-linux
+        run: dnf install -y -q ShellCheck desktop-file-utils appstream rpmlint findutils diffutils tar gzip util-linux
       # The container runs as root; the installer suite re-runs itself as nobody.
       - name: Tailscale installer scenarios
         run: ./scripts/test-install-tailscale.sh
       - name: Install and package scripts
         run: ./scripts/test-install.sh
       # STRICT makes a missing linter a failure rather than a skipped check.
-      - name: Shell, desktop entry and AppStream checks
+      - name: Shell, spec, desktop entry and AppStream checks
         run: STRICT=1 ./scripts/check-packaging.sh
+      - name: Versions agree across Cargo.toml and packaging
+        run: ./scripts/check-versions.sh
 
   msrv:
     name: Minimum Rust version
@@ -165,11 +167,15 @@ jobs:
         with:
           cache-key: release
       - run: cargo build --release --locked
-      - name: Build tarball
+      - name: Build tarball and .deb
         run: |
           # Stamp files with the commit time so a rebuild of this commit is
           # byte-identical.
-          SOURCE_DATE_EPOCH="$(git log -1 --format=%ct)" ./scripts/package.sh
+          SOURCE_DATE_EPOCH="$(git log -1 --format=%ct)"
+          export SOURCE_DATE_EPOCH
+          ./scripts/package.sh
+          # Built on Ubuntu 24.04, so the .deb needs glibc 2.39 or newer.
+          packaging/debian/build-deb.sh target/release dist
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: package

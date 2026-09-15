@@ -28,14 +28,14 @@ expected_payload() {
     cat <<'LIST'
 bin/cosmic-applet-tailscale
 bin/cosmic-tailscale
-share/applications/com.system76.CosmicAppletTailscale.desktop
-share/applications/com.system76.CosmicTailscale.Taildrop.desktop
-share/applications/com.system76.CosmicTailscale.desktop
-share/icons/hicolor/scalable/apps/com.system76.CosmicTailscale-symbolic.svg
-share/icons/hicolor/scalable/status/com.system76.CosmicAppletTailscale-connected-symbolic.svg
-share/icons/hicolor/scalable/status/com.system76.CosmicAppletTailscale-disconnected-symbolic.svg
-share/icons/hicolor/scalable/status/com.system76.CosmicAppletTailscale-exitnode-symbolic.svg
-share/metainfo/com.system76.CosmicTailscale.metainfo.xml
+share/applications/io.github.leechristophermurray.CosmicAppletTailscale.desktop
+share/applications/io.github.leechristophermurray.CosmicTailscale.Taildrop.desktop
+share/applications/io.github.leechristophermurray.CosmicTailscale.desktop
+share/icons/hicolor/scalable/apps/io.github.leechristophermurray.CosmicTailscale-symbolic.svg
+share/icons/hicolor/scalable/status/io.github.leechristophermurray.CosmicAppletTailscale-connected-symbolic.svg
+share/icons/hicolor/scalable/status/io.github.leechristophermurray.CosmicAppletTailscale-disconnected-symbolic.svg
+share/icons/hicolor/scalable/status/io.github.leechristophermurray.CosmicAppletTailscale-exitnode-symbolic.svg
+share/metainfo/io.github.leechristophermurray.CosmicTailscale.metainfo.xml
 LIST
 }
 
@@ -68,7 +68,7 @@ scenario_user_install() {
     HOME="$home" "$project/scripts/install.sh" --bin-dir "$bins" >/dev/null || return 1
     same_payload "$home/.local" || return 1
     [[ "$(stat -c %a "$home/.local/bin/cosmic-tailscale")" == 755 ]] || { echo "binary is not 0755"; return 1; }
-    [[ "$(stat -c %a "$home/.local/share/applications/com.system76.CosmicTailscale.desktop")" == 644 ]] || { echo "desktop entry is not 0644"; return 1; }
+    [[ "$(stat -c %a "$home/.local/share/applications/io.github.leechristophermurray.CosmicTailscale.desktop")" == 644 ]] || { echo "desktop entry is not 0644"; return 1; }
     # A per-user icon cache would go stale when other applications add icons.
     [[ ! -e "$home/.local/share/icons/hicolor/icon-theme.cache" ]] || { echo "created a per-user icon cache"; return 1; }
     HOME="$home" "$project/scripts/install.sh" --uninstall >/dev/null || return 1
@@ -87,6 +87,27 @@ scenario_missing_binaries() {
     [[ ! -e "$home/.local" ]] || { echo "installed data files before failing"; return 1; }
 }
 check "missing binaries fail before anything is installed" scenario_missing_binaries
+
+scenario_legacy_ids() {
+    local home="$work/legacy-home" local_share
+    local_share="$home/.local/share"
+    # What an install from before the app ID change left behind.
+    mkdir -p "$local_share/applications" "$local_share/metainfo" \
+        "$local_share/icons/hicolor/scalable/apps" "$local_share/icons/hicolor/scalable/status" || return 1
+    touch "$local_share/applications/com.system76.CosmicTailscale.desktop" \
+        "$local_share/applications/com.system76.CosmicAppletTailscale.desktop" \
+        "$local_share/applications/com.system76.CosmicTailscale.Taildrop.desktop" \
+        "$local_share/metainfo/com.system76.CosmicTailscale.metainfo.xml" \
+        "$local_share/icons/hicolor/scalable/apps/com.system76.CosmicTailscale-symbolic.svg" \
+        "$local_share/icons/hicolor/scalable/status/com.system76.CosmicAppletTailscale-connected-symbolic.svg" || return 1
+    # Someone else's file with a similar name must survive.
+    touch "$local_share/applications/com.system76.CosmicTerm.desktop" || return 1
+
+    HOME="$home" "$project/scripts/install.sh" --bin-dir "$bins" >/dev/null || return 1
+    diff <( (expected_payload; echo share/applications/com.system76.CosmicTerm.desktop) | LC_ALL=C sort) \
+        <(payload "$home/.local") || return 1
+}
+check "installing removes files left under the old System76 IDs" scenario_legacy_ids
 
 # ---- staged install, as a package build does --------------------------------------
 

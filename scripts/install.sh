@@ -19,8 +19,12 @@
 
 set -euo pipefail
 
-readonly APP_ID="com.system76.CosmicTailscale"
-readonly APPLET_ID="com.system76.CosmicAppletTailscale"
+readonly APP_ID="io.github.leechristophermurray.CosmicTailscale"
+readonly APPLET_ID="io.github.leechristophermurray.CosmicAppletTailscale"
+# The IDs used before the move out of System76's namespace. Their files are
+# removed on install and uninstall, or menus would list everything twice.
+readonly LEGACY_APP_ID="com.system76.CosmicTailscale"
+readonly LEGACY_APPLET_ID="com.system76.CosmicAppletTailscale"
 readonly BINARIES=(cosmic-tailscale cosmic-applet-tailscale)
 
 here="$(cd "$(dirname "$0")" && pwd)"
@@ -65,18 +69,25 @@ applications="$root/share/applications"
 metainfo="$root/share/metainfo"
 icons="$root/share/icons/hicolor"
 
+# Every data file for one pair of IDs.
+remove_data_files() {
+    local app="$1" applet="$2"
+    rm -f "$applications/$app.desktop" \
+          "$applications/$applet.desktop" \
+          "$applications/$app.Taildrop.desktop" \
+          "$metainfo/$app.metainfo.xml" \
+          "$icons/scalable/apps/$app-symbolic.svg" \
+          "$icons/scalable/status/$applet"-*.svg
+}
+
 # ---- uninstall -------------------------------------------------------------------
 
 if [[ "$action" == "uninstall" ]]; then
     for binary in "${BINARIES[@]}"; do
         rm -f "$root/bin/$binary"
     done
-    rm -f "$applications/$APP_ID.desktop" \
-          "$applications/$APPLET_ID.desktop" \
-          "$applications/$APP_ID.Taildrop.desktop" \
-          "$metainfo/$APP_ID.metainfo.xml" \
-          "$icons/scalable/apps/$APP_ID-symbolic.svg" \
-          "$icons/scalable/status/$APPLET_ID"-*.svg
+    remove_data_files "$APP_ID" "$APPLET_ID"
+    remove_data_files "$LEGACY_APP_ID" "$LEGACY_APPLET_ID"
     if [[ -z "$destdir" ]]; then
         update-desktop-database "$applications" 2>/dev/null || true
     fi
@@ -92,6 +103,8 @@ for binary in "${BINARIES[@]}"; do
         exit 1
     fi
 done
+
+remove_data_files "$LEGACY_APP_ID" "$LEGACY_APPLET_ID"
 
 for binary in "${BINARIES[@]}"; do
     install -Dm0755 "$bin_dir/$binary" "$root/bin/$binary"

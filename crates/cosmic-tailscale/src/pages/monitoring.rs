@@ -79,6 +79,24 @@ fn hub_card(state: &State) -> Element<'_, Message> {
 
     if beszel.connection.is_connected() {
         column = column.push(
+            widget::Row::new()
+                .push(
+                    widget::Column::new()
+                        .push(widget::text::body(fl!("beszel-alert-notifications")))
+                        .push(widget::text::caption(fl!(
+                            "beszel-alert-notifications-detail"
+                        )))
+                        .spacing(spacing.space_xxxs)
+                        .width(Length::Fill),
+                )
+                .push(
+                    widget::toggler(!state.config.beszel_alerts_muted)
+                        .on_toggle(Message::SetBeszelAlertNotifications),
+                )
+                .spacing(spacing.space_s)
+                .align_y(cosmic::iced::Alignment::Center),
+        );
+        column = column.push(
             widget::button::text(fl!("beszel-sign-out"))
                 .on_press(Message::BeszelSignOut)
                 .class(theme::Button::Text),
@@ -332,15 +350,18 @@ fn stat_row<'a>(system: &'a SystemRecord, stats: &'a Stats) -> Element<'a, Messa
             format!("{:.0}%", stats.memory_pct),
             memory,
         ))
-        .push(widgets::stat_card(
-            icons::SERVICES,
-            fl!("beszel-disk"),
-            format!("{:.0}%", stats.disk_pct),
-            fl!(
-                "beszel-disk-detail",
-                used = format!("{:.0} GiB", stats.disk_used),
-                total = format!("{:.0} GiB", stats.disk_total)
+        .push(opens_files(
+            widgets::stat_card(
+                icons::SERVICES,
+                fl!("beszel-disk"),
+                format!("{:.0}%", stats.disk_pct),
+                fl!(
+                    "beszel-disk-detail",
+                    used = format!("{:.0} GiB", stats.disk_used),
+                    total = format!("{:.0} GiB", stats.disk_total)
+                ),
             ),
+            &system.id,
         ))
         .push(widgets::stat_card(
             icons::MONITORING,
@@ -380,9 +401,10 @@ fn charts(beszel: &BeszelState) -> Element<'_, Message> {
         .spacing(spacing.space_m);
 
     // Panels sit two to a row, in the order `chart_panels` returns them.
+    let system_id = beszel.selected.as_deref().unwrap_or_default();
     let mut panels = chart_panels(history).into_iter();
     while let Some(left) = panels.next() {
-        column = column.push(chart_row(left, panels.next()));
+        column = column.push(chart_row(left, panels.next(), system_id));
     }
 
     if let Some(temperature) = temperature_panel(history) {
@@ -522,8 +544,25 @@ pub(crate) fn chart_panels(history: &[beszel_client::StatsRecord]) -> Vec<Panel>
     ]
 }
 
+/// Make a disk title open the machine's files on double-click.
+///
+/// The machine is mounted first if it is not already; the hint says so, since
+/// nothing else on the page suggests a title can be clicked.
+fn opens_files<'a>(
+    content: impl Into<Element<'a, Message>>,
+    system_id: &str,
+) -> Element<'a, Message> {
+    widget::tooltip(
+        widget::mouse_area(content)
+            .on_double_click(Message::OpenSystemFiles(system_id.to_string())),
+        widget::text::caption(fl!("files-open-hint")),
+        widget::tooltip::Position::Top,
+    )
+    .into()
+}
+
 /// Two panels side by side. A trailing odd panel takes the full width.
-fn chart_row<'a>(left: Panel, right: Option<Panel>) -> Element<'a, Message> {
+fn chart_row<'a>(left: Panel, right: Option<Panel>, system_id: &str) -> Element<'a, Message> {
     let spacing = theme::spacing();
 
     let panel = |panel: Panel| {
@@ -534,8 +573,16 @@ fn chart_row<'a>(left: Panel, right: Option<Panel>) -> Element<'a, Message> {
             chart::view(panel.chart, panel.caption)
         };
 
+        let is_disk = panel.title == fl!("beszel-disk") || panel.title == fl!("beszel-disk-io");
+        let title = widgets::section_label(panel.title);
+        let title = if is_disk {
+            opens_files(title, system_id)
+        } else {
+            title
+        };
+
         widget::Column::new()
-            .push(widgets::section_label(panel.title))
+            .push(title)
             .push(body)
             .spacing(spacing.space_xxs)
             .width(Length::FillPortion(1))

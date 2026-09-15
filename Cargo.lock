@@ -1073,6 +1073,7 @@ dependencies = [
  "i18n-embed-fl",
  "keyring",
  "libcosmic",
+ "notify-rust",
  "open",
  "rust-embed",
  "serde_json",

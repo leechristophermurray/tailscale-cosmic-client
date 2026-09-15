@@ -10,7 +10,7 @@ use serde::Deserialize;
 
 use crate::error::{Error, Result};
 use crate::model::{
-    ContainerStats, ListResponse, Stats, StatsPeriod, SystemRecord,
+    AlertHistoryRecord, ContainerStats, ListResponse, Stats, StatsPeriod, SystemRecord,
     container::ContainerStatsRecord, stats::StatsRecord,
 };
 
@@ -205,6 +205,21 @@ impl BeszelHub {
     pub async fn systems(&self) -> Result<Vec<SystemRecord>> {
         let path = format!("/api/collections/systems/records?perPage={MAX_PAGE}&sort=name");
         let list: ListResponse<SystemRecord> = self.get_json(&path).await?;
+        Ok(list.items)
+    }
+
+    /// The signed-in user's most recent alert firings, newest first, each with
+    /// its system's name expanded in.
+    ///
+    /// The hub only lists a user's own alerts, and from 0.18.5 refuses to fetch
+    /// a single history row, so a list is the only way to read them. Hubs older
+    /// than 0.12 have no history collection and answer 404.
+    pub async fn alert_history(&self, limit: u32) -> Result<Vec<AlertHistoryRecord>> {
+        let path = format!(
+            "/api/collections/alerts_history/records?sort=-created&perPage={}&expand=system",
+            limit.clamp(1, MAX_PAGE)
+        );
+        let list: ListResponse<AlertHistoryRecord> = self.get_json(&path).await?;
         Ok(list.items)
     }
 

@@ -63,6 +63,16 @@ pub struct State {
     pub announced_files: std::collections::HashSet<String>,
     /// Set once the key-expiry warning has been shown this session.
     pub announced_key_expiry: bool,
+
+    // ---- remote files ---------------------------------------------------
+    /// The SFTP locations GVfs has mounted, refreshed while the Machines or
+    /// Monitoring page is open.
+    pub mounts: Vec<super::mounts::Mount>,
+    /// Stable node IDs with a mount or unmount in flight.
+    pub mount_busy: std::collections::HashSet<String>,
+    /// SSH user names typed on the Machines page, by stable node ID, before a
+    /// successful mount saves them.
+    pub mount_user_inputs: HashMap<String, String>,
 }
 
 impl State {
@@ -141,6 +151,70 @@ impl State {
         }
 
         status.self_status.as_ref()
+    }
+
+    /// The machine a Beszel system reports on, if it is on this tailnet.
+    #[must_use]
+    pub fn peer_for_system(&self, system: &beszel_client::SystemRecord) -> Option<&PeerStatus> {
+        let status = self.status.as_deref()?;
+        status
+            .self_status
+            .iter()
+            .chain(status.peer.values())
+            .find(|peer| {
+                system.matches_peer(peer.display_name(), peer.magic_dns(), &peer.tailscale_ips)
+            })
+    }
+
+    /// Whether offering to mount this machine makes sense: it is another
+    /// machine, it is online, and it is not a phone or tablet, which do not run
+    /// an SSH server. Whether SSH actually answers is found out by trying.
+    #[must_use]
+    pub fn can_mount(&self, peer: &PeerStatus) -> bool {
+        peer.online
+            && !self.is_self(peer)
+            && !matches!(peer.os.to_ascii_lowercase().as_str(), "android" | "ios")
+    }
+
+    /// The host to mount a machine by: its MagicDNS name when this machine
+    /// resolves MagicDNS, otherwise its Tailscale IPv4 address.
+    #[must_use]
+    pub fn mount_host(&self, peer: &PeerStatus) -> Option<String> {
+        let magic_dns = self.prefs.as_deref().is_some_and(|prefs| prefs.corp_dns);
+        if magic_dns && !peer.magic_dns().is_empty() {
+            return Some(peer.magic_dns().to_ascii_lowercase());
+        }
+        peer.ipv4().map(str::to_string)
+    }
+
+    /// The SSH user to mount a machine as: what was typed, else what was last
+    /// used for it, else the local user name.
+    #[must_use]
+    pub fn mount_user(&self, peer: &PeerStatus) -> String {
+        self.mount_user_inputs
+            .get(&peer.id)
+            .or_else(|| self.config.mount_users.get(&peer.id))
+            .cloned()
+            .unwrap_or_else(local_user_name)
+    }
+
+    /// The mount for this machine, whichever of its names or users it was
+    /// mounted under — by this app or from the file manager. One for the user
+    /// named on the page is preferred.
+    #[must_use]
+    pub fn mount_for(&self, peer: &PeerStatus) -> Option<&super::mounts::Mount> {
+        let dns = peer.magic_dns().to_ascii_lowercase();
+        let user = self.mount_user(peer);
+        let mut matches = self.mounts.iter().filter(|mount| {
+            mount.remote.host == dns || peer.tailscale_ips.contains(&mount.remote.host)
+        });
+        let first = matches.next()?;
+        if first.remote.user == user {
+            return Some(first);
+        }
+        matches
+            .find(|mount| mount.remote.user == user)
+            .or(Some(first))
     }
 
     #[must_use]
@@ -349,4 +423,12 @@ impl Throughput {
     pub fn has_rate(&self) -> bool {
         self.last.is_some() && (self.rx_per_second > 0.0 || self.tx_per_second > 0.0)
     }
+}
+
+/// The name of the user running this application, the usual SSH login.
+#[must_use]
+pub fn local_user_name() -> String {
+    std::env::var("USER")
+        .or_else(|_| std::env::var("LOGNAME"))
+        .unwrap_or_default()
 }

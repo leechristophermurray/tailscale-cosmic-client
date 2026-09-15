@@ -139,6 +139,8 @@ pub enum Message {
     BeszelPeriodChanged(usize),
     /// Periodic hub poll.
     BeszelRefresh,
+    /// Turn desktop notifications for the hub's alerts on (`true`) or off.
+    SetBeszelAlertNotifications(bool),
 
     // ---- agent deployment ----------------------------------------------------
     /// Ask to install the agent on this peer. Shows the command for approval;
@@ -148,6 +150,21 @@ pub enum Message {
     BeszelConfirmInstall,
     BeszelCancelInstall,
     BeszelAgentInstalled(String, Arc<beszel_client::InstallOutcome>),
+
+    // ---- remote files ------------------------------------------------------
+    /// The SSH user typed for a machine, by stable node ID.
+    MountUserChanged(String, String),
+    /// Mount this machine's files through GVfs.
+    MountPeer(String),
+    /// Open this machine in COSMIC Files, mounting it first if it is not.
+    OpenPeerFiles(String),
+    /// A mount finished. Carries whether to open it in Files afterwards.
+    MountFinished(String, bool, Result<crate::app::mounts::Mount, String>),
+    UnmountPeer(String),
+    UnmountFinished(String, Result<(), String>),
+    MountsLoaded(Result<Arc<Vec<crate::app::mounts::Mount>>, String>),
+    /// Open the machine behind a Beszel system in Files, by hub record id.
+    OpenSystemFiles(String),
 
     // ---- chrome -----------------------------------------------------------
     /// Dismiss the error banner.

@@ -7,10 +7,12 @@
 //! maps to so the abbreviations stay in one place instead of leaking into the
 //! UI.
 
+pub mod alert;
 pub mod container;
 pub mod stats;
 pub mod system;
 
+pub use alert::{AlertEvent, AlertHistoryRecord, AlertKind, AlertTracker};
 pub use container::ContainerStats;
 pub use stats::{Stats, StatsPeriod, ZfsPool};
 pub use system::{Info, SystemRecord, SystemStatus};

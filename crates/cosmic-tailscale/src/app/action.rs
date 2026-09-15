@@ -238,3 +238,41 @@ pub fn resume_after(duration: std::time::Duration) -> Task<Message> {
         Message::SuspendElapsed
     })
 }
+
+// ---- remote files ----------------------------------------------------------------
+
+/// Read which SFTP locations GVfs has mounted.
+pub fn list_mounts() -> Task<Message> {
+    cosmic::task::future(async move {
+        let result = super::mounts::list(&super::mounts::Tools::default()).await;
+        Message::MountsLoaded(result.map(Arc::new))
+    })
+}
+
+/// Mount a machine, then optionally open it in Files.
+pub fn mount(peer_id: String, remote: super::mounts::Remote, open: bool) -> Task<Message> {
+    cosmic::task::future(async move {
+        let result = super::mounts::mount(&super::mounts::Tools::default(), &remote).await;
+        Message::MountFinished(peer_id, open, result)
+    })
+}
+
+pub fn unmount(peer_id: String, remote: super::mounts::Remote) -> Task<Message> {
+    cosmic::task::future(async move {
+        let result = super::mounts::unmount(&super::mounts::Tools::default(), &remote).await;
+        Message::UnmountFinished(peer_id, result)
+    })
+}
+
+/// Open a location in COSMIC Files.
+pub fn open_in_files(location: String) -> Task<Message> {
+    cosmic::task::future(async move {
+        match super::mounts::open_in_files(&super::mounts::Tools::default(), &location).await {
+            Ok(()) => Message::Noop,
+            Err(message) => Message::TaildropCompleted(Err(Failure {
+                message,
+                unreachable: false,
+            })),
+        }
+    })
+}

@@ -161,6 +161,24 @@ mod tests {
         let _header = header::view(&state);
     }
 
+    /// The Files row has three shapes: offer to mount, busy, and mounted.
+    #[test]
+    fn the_files_row_renders_unmounted_busy_and_mounted() {
+        let mut state = populated_state();
+        state.selected = Some("nExample0005CNTRL".to_string());
+        drop(Page::Machines.view(&state));
+
+        state.mount_busy.insert("nExample0005CNTRL".to_string());
+        drop(Page::Machines.view(&state));
+
+        state.mount_busy.clear();
+        state.mounts = vec![crate::app::mounts::Mount {
+            remote: crate::app::mounts::Remote::new("alex", "homeforge.tail000000.ts.net").unwrap(),
+            home: Some("sftp://alex@homeforge.tail000000.ts.net/home/alex".to_string()),
+        }];
+        let _mounted = Page::Machines.view(&state);
+    }
+
     /// The Caddy page only grows its route list and add-route form once a
     /// connection exists, so the default state never reaches that code.
     #[test]

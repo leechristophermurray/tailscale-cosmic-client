@@ -6,6 +6,7 @@ pub mod beszel;
 pub mod caddy;
 pub mod config;
 pub mod message;
+pub mod mounts;
 pub mod notify;
 pub mod secrets;
 pub mod state;
@@ -52,7 +53,7 @@ impl cosmic::Application for App {
     type Flags = Flags;
     type Message = Message;
 
-    const APP_ID: &'static str = "com.system76.CosmicTailscale";
+    const APP_ID: &'static str = "io.github.leechristophermurray.CosmicTailscale";
 
     fn core(&self) -> &Core {
         &self.core
@@ -130,6 +131,13 @@ impl cosmic::Application for App {
     fn on_nav_select(&mut self, id: nav_bar::Id) -> Task<Self::Message> {
         self.nav.activate(id);
 
+        if matches!(
+            self.nav.active_data::<Page>(),
+            Some(Page::Machines | Page::Monitoring)
+        ) {
+            return action::list_mounts();
+        }
+
         // The exit-node list is the one place latency is shown without the user
         // asking for it, so opening the page is what triggers the probes.
         if self.nav.active_data::<Page>() == Some(&Page::ExitNodes) {
@@ -180,7 +188,17 @@ impl cosmic::Application for App {
                 return action::refresh_all(&self.api);
             }
 
-            Message::Tick => return action::refresh_all(&self.api),
+            Message::Tick => {
+                // Mounts come and go from the file manager too, but only the
+                // Machines and Monitoring pages show them.
+                if matches!(
+                    self.nav.active_data::<Page>(),
+                    Some(Page::Machines | Page::Monitoring)
+                ) {
+                    return Task::batch([action::refresh_all(&self.api), action::list_mounts()]);
+                }
+                return action::refresh_all(&self.api);
+            }
 
             Message::StatusLoaded(Ok(status)) => {
                 self.clear_daemon_error();
@@ -247,7 +265,12 @@ impl cosmic::Application for App {
 
             // ---- navigation -----------------------------------------------
             Message::FilterChanged(filter) => self.state.filter = filter,
-            Message::SelectPeer(id) => self.state.selected = Some(id),
+            Message::SelectPeer(id) => {
+                self.state.selected = Some(id);
+                // A machine could have been mounted or unmounted from the file
+                // manager since the last look.
+                return action::list_mounts();
+            }
 
             // ---- connection -----------------------------------------------
             Message::SetConnected(connected) => {
@@ -871,6 +894,113 @@ impl cosmic::Application for App {
                 return cosmic::task::message(Message::BeszelRefresh);
             }
 
+            Message::SetBeszelAlertNotifications(enabled) => {
+                let muted = !enabled;
+                match &self.config_handler {
+                    Some(handler) => {
+                        if let Err(error) =
+                            self.state.config.set_beszel_alerts_muted(handler, muted)
+                        {
+                            tracing::warn!(%error, "could not persist the alert setting");
+                        }
+                    }
+                    None => self.state.config.beszel_alerts_muted = muted,
+                }
+            }
+
+            // ---- remote files ---------------------------------------------------
+            Message::MountUserChanged(peer_id, user) => {
+                self.state.mount_user_inputs.insert(peer_id, user);
+            }
+
+            Message::MountPeer(peer_id) => return self.start_mount(&peer_id, false),
+
+            Message::OpenPeerFiles(peer_id) => {
+                let Some(peer) = self.peer(&peer_id) else {
+                    return self.machine_gone();
+                };
+                if let Some(mount) = self.state.mount_for(peer) {
+                    return action::open_in_files(mount.location());
+                }
+                return self.start_mount(&peer_id, true);
+            }
+
+            Message::MountFinished(peer_id, open, Ok(mount)) => {
+                self.state.mount_busy.remove(&peer_id);
+                self.persist_mount_user(&peer_id, &mount.remote.user);
+                self.state.notice = Some(fl!("notice-mounted", host = mount.remote.host.as_str()));
+
+                let location = mount.location();
+                self.state.mounts.retain(|m| m.remote != mount.remote);
+                self.state.mounts.push(mount);
+
+                if open {
+                    return action::open_in_files(location);
+                }
+            }
+            Message::MountFinished(peer_id, _, Err(message)) => {
+                self.state.mount_busy.remove(&peer_id);
+                self.state.error = Some(message);
+            }
+
+            Message::UnmountPeer(peer_id) => {
+                let Some(peer) = self.peer(&peer_id) else {
+                    return self.machine_gone();
+                };
+                let Some(remote) = self.state.mount_for(peer).map(|m| m.remote.clone()) else {
+                    return Task::none();
+                };
+                if !self.state.mount_busy.insert(peer_id.clone()) {
+                    return Task::none();
+                }
+                return action::unmount(peer_id, remote);
+            }
+            Message::UnmountFinished(peer_id, result) => {
+                self.state.mount_busy.remove(&peer_id);
+                match result {
+                    Ok(()) => {
+                        if let Some(peer) = self.peer(&peer_id) {
+                            let host = self.state.mount_for(peer).map(|m| m.remote.clone());
+                            if let Some(remote) = host {
+                                self.state.notice =
+                                    Some(fl!("notice-unmounted", host = remote.host.as_str()));
+                                self.state.mounts.retain(|m| m.remote != remote);
+                            }
+                        }
+                        return action::list_mounts();
+                    }
+                    Err(message) => self.state.error = Some(message),
+                }
+            }
+
+            Message::MountsLoaded(Ok(mounts)) => self.state.mounts = (*mounts).clone(),
+            Message::MountsLoaded(Err(message)) => {
+                // Without gio there is nothing to show; the Mount button reports
+                // the problem if the user tries.
+                tracing::debug!(%message, "could not list mounts");
+            }
+
+            Message::OpenSystemFiles(system_id) => {
+                let Some(system) = self.state.beszel.systems.iter().find(|s| s.id == system_id)
+                else {
+                    return Task::none();
+                };
+                let Some(peer) = self.state.peer_for_system(system) else {
+                    self.state.error = Some(fl!(
+                        "files-system-not-on-tailnet",
+                        name = system.name.as_str()
+                    ));
+                    return Task::none();
+                };
+                // This machine's own disks are already local.
+                if self.state.is_self(peer) {
+                    let home = dirs::home_dir().unwrap_or_else(|| "/".into());
+                    return action::open_in_files(home.display().to_string());
+                }
+                let peer_id = peer.id.clone();
+                return cosmic::task::message(Message::OpenPeerFiles(peer_id));
+            }
+
             // ---- chrome -------------------------------------------------------
             Message::DismissError => {
                 self.state.error = None;
@@ -1042,6 +1172,73 @@ impl App {
             if let Err(error) = result {
                 tracing::warn!(%error, "could not persist the monitoring settings");
             }
+        }
+    }
+
+    /// A machine by stable node ID, this one included.
+    fn peer(&self, peer_id: &str) -> Option<&tailscale_localapi::PeerStatus> {
+        let status = self.state.status.as_deref()?;
+        status.peer_by_id(peer_id).or_else(|| {
+            status
+                .self_status
+                .as_ref()
+                .filter(|peer| peer.id == peer_id)
+        })
+    }
+
+    fn machine_gone(&mut self) -> Task<Message> {
+        self.state.error = Some(fl!("files-machine-gone"));
+        Task::none()
+    }
+
+    /// Mount a machine as the user named for it, unless one is already under way.
+    fn start_mount(&mut self, peer_id: &str, open: bool) -> Task<Message> {
+        let Some(peer) = self.peer(peer_id) else {
+            return self.machine_gone();
+        };
+        let user = self.state.mount_user(peer);
+        let Some(host) = self.state.mount_host(peer) else {
+            let name = peer.display_name().to_string();
+            self.state.error = Some(fl!("files-no-address", name = name));
+            return Task::none();
+        };
+        let remote = match mounts::Remote::new(&user, &host) {
+            Ok(remote) => remote,
+            Err(message) => {
+                self.state.error = Some(message);
+                return Task::none();
+            }
+        };
+        if !self.state.mount_busy.insert(peer_id.to_string()) {
+            return Task::none();
+        }
+        action::mount(peer_id.to_string(), remote, open)
+    }
+
+    /// Remember the SSH user a machine was mounted as, so the field is filled
+    /// in next time.
+    fn persist_mount_user(&mut self, peer_id: &str, user: &str) {
+        self.state.mount_user_inputs.remove(peer_id);
+        if self
+            .state
+            .config
+            .mount_users
+            .get(peer_id)
+            .map(String::as_str)
+            == Some(user)
+        {
+            return;
+        }
+
+        let mut users = self.state.config.mount_users.clone();
+        users.insert(peer_id.to_string(), user.to_string());
+
+        let Some(handler) = &self.config_handler else {
+            self.state.config.mount_users = users;
+            return;
+        };
+        if let Err(error) = self.state.config.set_mount_users(handler, users) {
+            tracing::warn!(%error, "could not persist the SSH user");
         }
     }
 
@@ -1890,5 +2087,280 @@ mod tests {
             app.state.beszel.last_install.is_some(),
             "the transcript is kept to read"
         );
+    }
+
+    // ---- remote files --------------------------------------------------------
+
+    const HOMEFORGE: &str = "nExample0005CNTRL";
+    const PHONE: &str = "nExample0003CNTRL";
+    const THIS_MACHINE: &str = "nExample0001CNTRL";
+
+    fn peer<'a>(app: &'a App, id: &str) -> &'a tailscale_localapi::PeerStatus {
+        app.peer(id).expect("fixture peer")
+    }
+
+    fn mounted(user: &str, host: &str, home: Option<&str>) -> mounts::Mount {
+        mounts::Mount {
+            remote: mounts::Remote::new(user, host).unwrap(),
+            home: home.map(str::to_string),
+        }
+    }
+
+    fn with_magic_dns(app: &mut App, enabled: bool) {
+        app.state.prefs = Some(prefs(&format!(r#"{{"CorpDNS": {enabled}}}"#)));
+    }
+
+    #[test]
+    fn machines_are_mounted_by_magic_dns_name_only_when_it_resolves_here() {
+        let mut app = connected_app();
+
+        with_magic_dns(&mut app, true);
+        assert_eq!(
+            app.state.mount_host(peer(&app, HOMEFORGE)).as_deref(),
+            Some("homeforge.tail000000.ts.net")
+        );
+
+        // Without MagicDNS on this machine the name would not resolve.
+        with_magic_dns(&mut app, false);
+        assert_eq!(
+            app.state.mount_host(peer(&app, HOMEFORGE)).as_deref(),
+            Some("100.101.0.5")
+        );
+    }
+
+    #[test]
+    fn phones_tablets_and_this_machine_are_not_offered_a_mount() {
+        let app = connected_app();
+        assert!(app.state.can_mount(peer(&app, HOMEFORGE)));
+        assert!(!app.state.can_mount(peer(&app, PHONE)));
+        assert!(!app.state.can_mount(peer(&app, THIS_MACHINE)));
+    }
+
+    #[test]
+    fn the_ssh_user_is_what_was_typed_then_what_was_saved_then_the_local_user() {
+        let mut app = connected_app();
+        assert_eq!(
+            app.state.mount_user(peer(&app, HOMEFORGE)),
+            state::local_user_name()
+        );
+
+        app.state
+            .config
+            .mount_users
+            .insert(HOMEFORGE.to_string(), "saved".to_string());
+        assert_eq!(app.state.mount_user(peer(&app, HOMEFORGE)), "saved");
+
+        let _ = app.update(Message::MountUserChanged(
+            HOMEFORGE.to_string(),
+            "typed".to_string(),
+        ));
+        assert_eq!(app.state.mount_user(peer(&app, HOMEFORGE)), "typed");
+    }
+
+    #[test]
+    fn mounting_starts_once_and_ignores_a_second_press_while_busy() {
+        let mut app = connected_app();
+        let _ = app.update(Message::MountUserChanged(
+            HOMEFORGE.to_string(),
+            "alex".to_string(),
+        ));
+
+        assert!(started(
+            &app.update(Message::MountPeer(HOMEFORGE.to_string()))
+        ));
+        assert!(app.state.mount_busy.contains(HOMEFORGE));
+        assert!(!started(
+            &app.update(Message::MountPeer(HOMEFORGE.to_string()))
+        ));
+    }
+
+    #[test]
+    fn a_user_name_ssh_would_read_as_an_option_is_refused_before_anything_runs() {
+        let mut app = connected_app();
+        let _ = app.update(Message::MountUserChanged(
+            HOMEFORGE.to_string(),
+            "-oProxyCommand=touch /tmp/x".to_string(),
+        ));
+
+        assert!(!started(
+            &app.update(Message::MountPeer(HOMEFORGE.to_string()))
+        ));
+        assert!(app.state.error.is_some());
+        assert!(app.state.mount_busy.is_empty());
+    }
+
+    #[test]
+    fn a_finished_mount_remembers_the_user_and_opens_files_when_asked() {
+        let mut app = connected_app();
+        let _ = app.update(Message::MountUserChanged(
+            HOMEFORGE.to_string(),
+            "alex".to_string(),
+        ));
+        let _ = app.update(Message::OpenPeerFiles(HOMEFORGE.to_string()));
+
+        let task = app.update(Message::MountFinished(
+            HOMEFORGE.to_string(),
+            true,
+            Ok(mounted(
+                "alex",
+                "100.101.0.5",
+                Some("sftp://alex@100.101.0.5/home/alex"),
+            )),
+        ));
+
+        assert!(started(&task), "files should open after mounting");
+        assert!(app.state.mount_busy.is_empty());
+        assert_eq!(
+            app.state
+                .config
+                .mount_users
+                .get(HOMEFORGE)
+                .map(String::as_str),
+            Some("alex")
+        );
+        // The typed value has been saved, so the field now shows the saved one.
+        assert!(!app.state.mount_user_inputs.contains_key(HOMEFORGE));
+        assert!(app.state.mount_for(peer(&app, HOMEFORGE)).is_some());
+    }
+
+    #[test]
+    fn a_failed_mount_explains_itself_and_frees_the_button() {
+        let mut app = connected_app();
+        let _ = app.update(Message::MountPeer(HOMEFORGE.to_string()));
+        let _ = app.update(Message::MountFinished(
+            HOMEFORGE.to_string(),
+            false,
+            Err("Signing in to homeforge failed: Permission denied (publickey).".to_string()),
+        ));
+
+        assert!(app.state.mount_busy.is_empty());
+        assert!(
+            app.state
+                .error
+                .as_deref()
+                .unwrap()
+                .contains("Permission denied")
+        );
+        assert!(
+            app.state.config.mount_users.is_empty(),
+            "nothing saved on failure"
+        );
+    }
+
+    #[test]
+    fn opening_a_mounted_machine_does_not_mount_it_again() {
+        let mut app = connected_app();
+        app.state.mounts = vec![mounted("alex", "homeforge.tail000000.ts.net", None)];
+
+        assert!(started(
+            &app.update(Message::OpenPeerFiles(HOMEFORGE.to_string()))
+        ));
+        assert!(app.state.mount_busy.is_empty(), "no mount was started");
+    }
+
+    #[test]
+    fn a_mount_made_in_the_file_manager_is_recognised_by_address_or_name() {
+        let mut app = connected_app();
+        let _ = app.update(Message::MountUserChanged(
+            HOMEFORGE.to_string(),
+            "alex".to_string(),
+        ));
+
+        app.state.mounts = vec![mounted("root", "100.101.0.5", None)];
+        assert_eq!(
+            app.state
+                .mount_for(peer(&app, HOMEFORGE))
+                .map(|m| m.remote.user.as_str()),
+            Some("root")
+        );
+
+        // With several, the one for the user named on the page wins.
+        app.state
+            .mounts
+            .push(mounted("alex", "homeforge.tail000000.ts.net", None));
+        assert_eq!(
+            app.state
+                .mount_for(peer(&app, HOMEFORGE))
+                .map(|m| m.remote.user.as_str()),
+            Some("alex")
+        );
+        assert!(app.state.mount_for(peer(&app, PHONE)).is_none());
+    }
+
+    #[test]
+    fn unmounting_removes_the_mount_and_rereads_the_list() {
+        let mut app = connected_app();
+        app.state.mounts = vec![mounted("alex", "homeforge.tail000000.ts.net", None)];
+
+        assert!(started(
+            &app.update(Message::UnmountPeer(HOMEFORGE.to_string()))
+        ));
+        assert!(app.state.mount_busy.contains(HOMEFORGE));
+
+        let task = app.update(Message::UnmountFinished(HOMEFORGE.to_string(), Ok(())));
+        assert!(started(&task));
+        assert!(app.state.mounts.is_empty());
+        assert!(app.state.mount_busy.is_empty());
+    }
+
+    #[test]
+    fn mounting_a_machine_that_has_left_the_tailnet_says_so() {
+        let mut app = connected_app();
+        assert!(!started(
+            &app.update(Message::MountPeer("nGone".to_string()))
+        ));
+        assert!(app.state.error.is_some());
+    }
+
+    fn beszel_system(id: &str, name: &str, host: &str) -> beszel_client::SystemRecord {
+        serde_json::from_value(serde_json::json!({
+            "id": id, "name": name, "host": host, "status": "up", "info": {}
+        }))
+        .expect("system record decodes")
+    }
+
+    #[test]
+    fn double_clicking_a_disk_opens_that_machine_mounting_it_first() {
+        let mut app = connected_app();
+        app.state.beszel.systems = vec![beszel_system("s1", "homeforge", "100.101.0.5")];
+
+        let task = app.update(Message::OpenSystemFiles("s1".to_string()));
+        assert!(started(&task), "hands over to OpenPeerFiles");
+        let _ = app.update(Message::OpenPeerFiles(HOMEFORGE.to_string()));
+        assert!(app.state.mount_busy.contains(HOMEFORGE));
+    }
+
+    #[test]
+    fn a_monitored_system_off_the_tailnet_cannot_be_opened() {
+        let mut app = connected_app();
+        app.state.beszel.systems = vec![beszel_system("s9", "far-away", "203.0.113.9")];
+
+        assert!(!started(
+            &app.update(Message::OpenSystemFiles("s9".to_string()))
+        ));
+        assert!(app.state.error.as_deref().unwrap().contains("far-away"));
+    }
+
+    #[test]
+    fn this_machine_s_own_disk_opens_locally_without_mounting() {
+        let mut app = connected_app();
+        app.state.beszel.systems = vec![beszel_system("s0", "fedora", "100.101.0.1")];
+
+        assert!(started(
+            &app.update(Message::OpenSystemFiles("s0".to_string()))
+        ));
+        assert!(app.state.mount_busy.is_empty());
+    }
+
+    #[test]
+    fn the_alert_switch_stores_its_inverse_so_unset_means_on() {
+        let mut app = app();
+        assert!(!app.state.config.beszel_alerts_muted);
+
+        let _ = app.update(Message::SetBeszelAlertNotifications(false));
+        assert!(app.state.config.beszel_alerts_muted);
+
+        let _ = app.update(Message::SetBeszelAlertNotifications(true));
+        assert!(!app.state.config.beszel_alerts_muted);
     }
 }

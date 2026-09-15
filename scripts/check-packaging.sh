@@ -32,8 +32,24 @@ run_check() {
     fi
 }
 
-section "shellcheck: scripts/*.sh"
-run_check shellcheck shellcheck -x scripts/*.sh
+section "shellcheck: scripts, packaging scripts and PKGBUILDs"
+check_shell() {
+    shellcheck -x scripts/*.sh packaging/debian/*.sh &&
+        # PKGBUILDs are sourced by makepkg, which defines pkgdir and srcdir and
+        # reads the variables they set.
+        shellcheck --shell=bash -e SC2034,SC2154,SC2164 packaging/arch/*/PKGBUILD
+}
+run_check shellcheck check_shell
+
+section "rpmlint: packaging/rpm/*.spec"
+check_spec() {
+    local report
+    # The spec's Source0 is a release download that rpmlint cannot fetch.
+    report="$(rpmlint packaging/rpm/*.spec 2>&1)" || true
+    printf '%s\n' "$report" | grep -E ': (E|W): ' | sed 's/^/  /' || true
+    ! printf '%s\n' "$report" | grep -qE ': E: '
+}
+run_check rpmlint check_spec
 
 section "desktop-file-validate: data/applications/*.desktop"
 check_desktop() {
@@ -59,8 +75,7 @@ section "appstreamcli: data/metainfo/*.xml"
 check_metainfo() {
     local report
     report="$(appstreamcli validate --no-net --no-color data/metainfo/*.xml 2>&1 || true)"
-    # The missing homepage is deliberate until the project has a public home;
-    # warnings are shown, errors fail.
+    # Warnings are advice and are shown; errors fail.
     printf '%s\n' "$report" | grep -E '^(E|W):' | sed 's/^/  /' || true
     ! printf '%s\n' "$report" | grep -qE '^E:'
 }

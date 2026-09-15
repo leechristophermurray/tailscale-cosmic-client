@@ -245,6 +245,7 @@ fn detail_pane(state: &State) -> Element<'_, Message> {
         .push(detail_heading(state, peer))
         .push(address_row(peer))
         .push(action_row(state, peer))
+        .push(files_row(state, peer))
         .push(stat_row(state, peer))
         .push(capability_row(state, peer))
         .push(taildrop_prompt(state, peer))
@@ -436,6 +437,75 @@ fn action_row<'a>(state: &'a State, peer: &'a PeerStatus) -> Element<'a, Message
         .push(widgets::icon_button(icons::REFRESH, ping_label, ping))
         .push(widgets::icon_button(icons::SEND, send_label, send))
         .spacing(spacing.space_xs)
+        .into()
+}
+
+/// Mount this machine's home directory, or open and unmount it once mounted.
+///
+/// Hidden for this machine and for phones and tablets; for an offline machine
+/// only an existing mount can still be unmounted.
+fn files_row<'a>(state: &'a State, peer: &'a PeerStatus) -> Element<'a, Message> {
+    let spacing = theme::spacing();
+    let busy = state.mount_busy.contains(&peer.id);
+    let mount = state.mount_for(peer);
+
+    if mount.is_none() && !state.can_mount(peer) {
+        return widget::Space::new().width(0).height(0).into();
+    }
+
+    let mut row = widget::Row::new()
+        .spacing(spacing.space_xs)
+        .align_y(Alignment::End);
+
+    let caption = if let Some(mount) = mount {
+        row = row
+            .push(
+                widgets::icon_button(
+                    icons::FOLDER_REMOTE,
+                    fl!("files-open"),
+                    Some(Message::OpenPeerFiles(peer.id.clone())),
+                )
+                .class(theme::Button::Suggested),
+            )
+            .push(widgets::icon_button(
+                icons::EJECT,
+                if busy {
+                    fl!("files-unmounting")
+                } else {
+                    fl!("files-unmount")
+                },
+                (!busy).then(|| Message::UnmountPeer(peer.id.clone())),
+            ));
+        fl!("files-mounted-at", location = mount.location())
+    } else {
+        let peer_id = peer.id.clone();
+        row = row
+            .push(
+                widget::text_input::text_input(
+                    crate::app::state::local_user_name(),
+                    state.mount_user(peer),
+                )
+                .label(fl!("files-user"))
+                .on_input(move |user| Message::MountUserChanged(peer_id.clone(), user))
+                .width(Length::Fixed(180.0)),
+            )
+            .push(widgets::icon_button(
+                icons::FOLDER_REMOTE,
+                if busy {
+                    fl!("files-mounting")
+                } else {
+                    fl!("files-mount")
+                },
+                (!busy).then(|| Message::MountPeer(peer.id.clone())),
+            ));
+        fl!("files-mount-detail")
+    };
+
+    widget::Column::new()
+        .push(widgets::section_label(fl!("files-heading")))
+        .push(row)
+        .push(widget::text::caption(caption))
+        .spacing(spacing.space_xxs)
         .into()
 }
 

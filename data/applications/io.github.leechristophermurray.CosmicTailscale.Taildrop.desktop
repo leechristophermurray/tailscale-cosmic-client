@@ -3,13 +3,13 @@ Type=Application
 Name=Send via Taildrop…
 Comment=Send the selected files to a machine on your tailnet
 Exec=cosmic-tailscale --send %F
-Icon=com.system76.CosmicTailscale-symbolic
+Icon=io.github.leechristophermurray.CosmicTailscale-symbolic
 Terminal=false
 NoDisplay=true
 Categories=Network;
 Keywords=Taildrop;Tailscale;Send;Share;
 StartupNotify=true
-StartupWMClass=com.system76.CosmicTailscale
+StartupWMClass=io.github.leechristophermurray.CosmicTailscale
 # There is no cross-desktop MIME type meaning "any file" — `all/all` is a KDE
 # convention that update-desktop-database discards, registering nothing at all.
 # This is a broad list of what people actually send instead, with
