@@ -63,7 +63,11 @@ impl SystemRecord {
     /// IP with a friendly name, or by MagicDNS name.
     #[must_use]
     pub fn matches_peer(&self, hostname: &str, dns_name: &str, addresses: &[String]) -> bool {
-        let candidates = [self.name.as_str(), self.host.as_str(), self.info.hostname.as_str()];
+        let candidates = [
+            self.name.as_str(),
+            self.host.as_str(),
+            self.info.hostname.as_str(),
+        ];
 
         candidates.iter().any(|candidate| {
             if candidate.is_empty() {

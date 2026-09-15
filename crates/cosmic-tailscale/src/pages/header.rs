@@ -6,8 +6,8 @@ use cosmic::iced::{Alignment, Length};
 use cosmic::{Apply, Element, theme, widget};
 
 use crate::app::message::Message;
-use crate::fl;
 use crate::app::state::State;
+use crate::fl;
 use crate::ui::{Tone, icons, widgets};
 
 pub fn view(state: &State) -> Element<'_, Message> {
@@ -202,7 +202,9 @@ fn quick_actions(state: &State) -> Element<'_, Message> {
         .align_y(Alignment::Center)
         .width(Length::Fill);
 
-    let mut peers = widget::Row::new().spacing(spacing.space_xs).width(Length::Fill);
+    let mut peers = widget::Row::new()
+        .spacing(spacing.space_xs)
+        .width(Length::Fill);
 
     for peer in state.quick_peers(2) {
         peers = peers.push(quick_peer(peer));
@@ -259,7 +261,10 @@ fn drop_zone(state: &State) -> Element<'_, Message> {
         (fl!("drop-zone-choose-files"), fl!("drop-zone-or-drop"))
     } else {
         (
-            fl!("drop-zone-ready", count = crate::ui::file_count(state.pending_drop.len())),
+            fl!(
+                "drop-zone-ready",
+                count = crate::ui::file_count(state.pending_drop.len())
+            ),
             fl!("drop-zone-choose"),
         )
     };
@@ -310,7 +315,6 @@ fn drop_zone_style(theme: &cosmic::Theme, active: bool) -> cosmic::widget::butto
         ..Default::default()
     }
 }
-
 
 fn suspend_button(state: &State) -> Element<'_, Message> {
     let label = if state.suspended_until.is_some() {

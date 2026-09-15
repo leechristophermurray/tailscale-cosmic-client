@@ -9,7 +9,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let api = LocalApi::default();
 
     let status = api.status().await?;
-    println!("daemon      {} ({:?})", status.version, status.backend_state);
+    println!(
+        "daemon      {} ({:?})",
+        status.version, status.backend_state
+    );
     println!("tailnet     {}", status.tailnet_name());
     if let Some(me) = &status.self_status {
         println!(
@@ -43,20 +46,37 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         prefs.subnet_routes()
     );
     if let Some(profile) = prefs.user_profile() {
-        println!("account     {} [{}]", profile.login_name, profile.initials());
+        println!(
+            "account     {} [{}]",
+            profile.login_name,
+            profile.initials()
+        );
     }
 
-    println!("\nexit node options: {:?}",
-        status.exit_node_options().iter().map(|p| p.display_name()).collect::<Vec<_>>());
+    println!(
+        "\nexit node options: {:?}",
+        status
+            .exit_node_options()
+            .iter()
+            .map(|p| p.display_name())
+            .collect::<Vec<_>>()
+    );
 
     let targets = api.file_targets().await?;
-    println!("taildrop targets: {:?}",
-        targets.iter().map(FileTargetName::name).collect::<Vec<_>>());
+    println!(
+        "taildrop targets: {:?}",
+        targets.iter().map(FileTargetName::name).collect::<Vec<_>>()
+    );
 
     let serve = api.serve_config().await?;
     println!("serve entries: {}", serve.entries().len());
     for entry in serve.entries() {
-        println!("  {} -> {} ({})", entry.url(), entry.target, entry.scope.label());
+        println!(
+            "  {} -> {} ({})",
+            entry.url(),
+            entry.target,
+            entry.scope.label()
+        );
     }
 
     if let Some((peer, ip)) = status

@@ -4,8 +4,8 @@
 //! so light mode, dark mode, and a user's custom accent tint all work without
 //! the pages knowing anything about it.
 
-use cosmic::iced::{Alignment, Border, Length};
 use cosmic::iced::widget::container::Style as ContainerStyle;
+use cosmic::iced::{Alignment, Border, Length};
 use cosmic::widget;
 use cosmic::{Apply, Element, theme};
 
@@ -71,13 +71,7 @@ pub fn pill<'a, Message: 'a>(label: impl Into<String>, tone: Tone) -> Element<'a
             let color = tone.color(cosmic);
             ContainerStyle {
                 text_color: Some(color),
-                background: Some(
-                    cosmic::iced::Color {
-                        a: 0.16,
-                        ..color
-                    }
-                    .into(),
-                ),
+                background: Some(cosmic::iced::Color { a: 0.16, ..color }.into()),
                 border: Border {
                     radius: cosmic.corner_radii.radius_m.into(),
                     width: 1.0,
@@ -90,10 +84,7 @@ pub fn pill<'a, Message: 'a>(label: impl Into<String>, tone: Tone) -> Element<'a
 }
 
 /// A dot followed by a label — the "● Online" pattern used throughout the list.
-pub fn status_label<'a, Message: 'a>(
-    label: impl Into<String>,
-    tone: Tone,
-) -> Element<'a, Message> {
+pub fn status_label<'a, Message: 'a>(label: impl Into<String>, tone: Tone) -> Element<'a, Message> {
     widget::Row::new()
         .push(dot(tone))
         .push(widget::text::caption(label.into()))

@@ -4,8 +4,8 @@ use chrono::{DateTime, Utc};
 use serde::Deserialize;
 use std::collections::BTreeMap;
 
-use super::non_zero_time;
 use super::ipn::BackendState;
+use super::non_zero_time;
 
 #[derive(Debug, Clone, Deserialize, Default)]
 #[serde(rename_all = "PascalCase", default)]
@@ -18,7 +18,10 @@ pub struct Status {
     /// Non-empty while the node is waiting for a browser login.
     #[serde(rename = "AuthURL")]
     pub auth_url: String,
-    #[serde(rename = "TailscaleIPs", deserialize_with = "crate::model::null_as_default")]
+    #[serde(
+        rename = "TailscaleIPs",
+        deserialize_with = "crate::model::null_as_default"
+    )]
     pub tailscale_ips: Vec<String>,
     #[serde(rename = "Self")]
     pub self_status: Option<PeerStatus>,
@@ -51,11 +54,8 @@ impl Status {
     /// Every peer that has advertised itself as usable for exit traffic.
     #[must_use]
     pub fn exit_node_options(&self) -> Vec<&PeerStatus> {
-        let mut nodes: Vec<&PeerStatus> = self
-            .peer
-            .values()
-            .filter(|p| p.exit_node_option)
-            .collect();
+        let mut nodes: Vec<&PeerStatus> =
+            self.peer.values().filter(|p| p.exit_node_option).collect();
         nodes.sort_by_key(|peer| peer.host_name.to_lowercase());
         nodes
     }
@@ -151,7 +151,10 @@ pub struct PeerStatus {
     pub os: String,
     #[serde(rename = "UserID")]
     pub user_id: u64,
-    #[serde(rename = "TailscaleIPs", deserialize_with = "crate::model::null_as_default")]
+    #[serde(
+        rename = "TailscaleIPs",
+        deserialize_with = "crate::model::null_as_default"
+    )]
     pub tailscale_ips: Vec<String>,
     /// Present when traffic is flowing peer-to-peer rather than via DERP.
     pub cur_addr: String,

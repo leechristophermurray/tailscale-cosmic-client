@@ -4,31 +4,17 @@
 # it and restarting the panel. `just dev-install` symlinks the binaries so that
 # loop is one command (`just dev-reload`) rather than a full reinstall.
 
-app-id := 'com.system76.CosmicTailscale'
-applet-id := 'com.system76.CosmicAppletTailscale'
-
 app-bin := 'cosmic-tailscale'
 applet-bin := 'cosmic-applet-tailscale'
 
 rootdir := ''
 prefix := '/usr'
 
-base-dir := absolute_path(clean(rootdir / prefix))
 cargo-target-dir := env('CARGO_TARGET_DIR', 'target')
 release-dir := cargo-target-dir / 'release'
 
-# System-wide destinations
-bin-dir := base-dir / 'bin'
-desktop-dir := base-dir / 'share' / 'applications'
-metainfo-dir := base-dir / 'share' / 'metainfo'
-icon-dir := base-dir / 'share' / 'icons' / 'hicolor' / 'scalable'
-
-# User-local destinations (no root, works on immutable distributions)
+# Per-user installs go here: no root, and works on immutable distributions
 user-base := env('HOME') / '.local'
-user-bin-dir := user-base / 'bin'
-user-desktop-dir := user-base / 'share' / 'applications'
-user-metainfo-dir := user-base / 'share' / 'metainfo'
-user-icon-dir := user-base / 'share' / 'icons' / 'hicolor' / 'scalable'
 
 default: build-release
 
@@ -62,9 +48,16 @@ build-release *args: (build-debug '--release' args)
 check *args:
     cargo clippy --workspace --all-targets {{args}} -- -D warnings
 
-# Run the test suite
+# Run every test: Rust, the install scripts, and packaging checks
 test *args:
     cargo test --workspace {{args}}
+    ./scripts/test-install-tailscale.sh
+    ./scripts/test-install.sh
+    ./scripts/check-packaging.sh
+
+# Line coverage of product code, excluding test modules (--html for a report)
+coverage *args:
+    ./scripts/coverage.sh {{args}}
 
 # Run the main window against the local tailscaled
 run *args:
@@ -98,58 +91,29 @@ _require-build:
 #
 # Install system-wide (build first, then run under sudo)
 install: _require-build _check-tailscale
-    install -Dm0755 {{release-dir / app-bin}} {{bin-dir / app-bin}}
-    install -Dm0755 {{release-dir / applet-bin}} {{bin-dir / applet-bin}}
-    install -Dm0644 data/applications/{{app-id}}.desktop {{desktop-dir / app-id}}.desktop
-    install -Dm0644 data/applications/{{applet-id}}.desktop {{desktop-dir / applet-id}}.desktop
-    install -Dm0644 data/applications/{{app-id}}.Taildrop.desktop {{desktop-dir / app-id}}.Taildrop.desktop
-    install -Dm0644 data/metainfo/{{app-id}}.metainfo.xml {{metainfo-dir / app-id}}.metainfo.xml
-    install -Dm0644 data/icons/scalable/apps/{{app-id}}-symbolic.svg {{icon-dir}}/apps/{{app-id}}-symbolic.svg
-    install -Dm0644 -t {{icon-dir}}/status data/icons/scalable/status/*.svg
-    @update-desktop-database {{desktop-dir}} 2>/dev/null || true
-    @gtk-update-icon-cache -qtf {{base-dir}}/share/icons/hicolor 2>/dev/null || true
+    ./scripts/install.sh --prefix {{prefix}} {{ if rootdir != '' { '--destdir ' + absolute_path(rootdir) } else { '' } }} --bin-dir {{release-dir}}
 
 # Install into ~/.local — no root required
 install-user: build-release _check-tailscale
-    install -Dm0755 {{release-dir / app-bin}} {{user-bin-dir / app-bin}}
-    install -Dm0755 {{release-dir / applet-bin}} {{user-bin-dir / applet-bin}}
-    install -Dm0644 data/applications/{{app-id}}.desktop {{user-desktop-dir / app-id}}.desktop
-    install -Dm0644 data/applications/{{applet-id}}.desktop {{user-desktop-dir / applet-id}}.desktop
-    install -Dm0644 data/applications/{{app-id}}.Taildrop.desktop {{user-desktop-dir / app-id}}.Taildrop.desktop
-    install -Dm0644 data/metainfo/{{app-id}}.metainfo.xml {{user-metainfo-dir / app-id}}.metainfo.xml
-    install -Dm0644 data/icons/scalable/apps/{{app-id}}-symbolic.svg {{user-icon-dir}}/apps/{{app-id}}-symbolic.svg
-    install -Dm0644 -t {{user-icon-dir}}/status data/icons/scalable/status/*.svg
-    @update-desktop-database {{user-desktop-dir}} 2>/dev/null || true
-    @echo "Installed. Add the applet in Settings ▸ Desktop ▸ Panel ▸ Configure panel applets."
+    ./scripts/install.sh --prefix {{user-base}} --bin-dir {{release-dir}}
+
+# Build a release tarball in dist/: binaries, data files and the install script
+package: build-release
+    ./scripts/package.sh {{release-dir}}
 
 # Symlink the release binaries into ~/.local so rebuilds take effect in place
 dev-install: build-release
-    mkdir -p {{user-bin-dir}}
-    ln -sf {{absolute_path(release-dir / app-bin)}} {{user-bin-dir / app-bin}}
-    ln -sf {{absolute_path(release-dir / applet-bin)}} {{user-bin-dir / applet-bin}}
-    install -Dm0644 data/applications/{{app-id}}.desktop {{user-desktop-dir / app-id}}.desktop
-    install -Dm0644 data/applications/{{applet-id}}.desktop {{user-desktop-dir / applet-id}}.desktop
-    install -Dm0644 data/applications/{{app-id}}.Taildrop.desktop {{user-desktop-dir / app-id}}.Taildrop.desktop
-    install -Dm0644 data/metainfo/{{app-id}}.metainfo.xml {{user-metainfo-dir / app-id}}.metainfo.xml
-    install -Dm0644 data/icons/scalable/apps/{{app-id}}-symbolic.svg {{user-icon-dir}}/apps/{{app-id}}-symbolic.svg
-    install -Dm0644 -t {{user-icon-dir}}/status data/icons/scalable/status/*.svg
-    @update-desktop-database {{user-desktop-dir}} 2>/dev/null || true
-    @echo "Add the applet in Settings ▸ Desktop ▸ Panel, then run 'just dev-reload' after edits."
+    ./scripts/install.sh --prefix {{user-base}} --bin-dir {{release-dir}}
+    ln -sf {{absolute_path(release-dir / app-bin)}} {{user-base / 'bin' / app-bin}}
+    ln -sf {{absolute_path(release-dir / applet-bin)}} {{user-base / 'bin' / applet-bin}}
+    @echo "Run 'just dev-reload' after edits."
 
 # Rebuild and restart the panel so it picks up the new applet binary
 dev-reload: build-release
     pkill cosmic-panel || true
 
 uninstall:
-    rm -f {{bin-dir / app-bin}} {{bin-dir / applet-bin}}
-    rm -f {{desktop-dir / app-id}}.desktop {{desktop-dir / applet-id}}.desktop {{desktop-dir / app-id}}.Taildrop.desktop
-    rm -f {{metainfo-dir / app-id}}.metainfo.xml
-    rm -f {{icon-dir}}/apps/{{app-id}}-symbolic.svg
-    rm -f {{icon-dir}}/status/{{applet-id}}-*.svg
+    ./scripts/install.sh --uninstall --prefix {{prefix}} {{ if rootdir != '' { '--destdir ' + absolute_path(rootdir) } else { '' } }}
 
 uninstall-user:
-    rm -f {{user-bin-dir / app-bin}} {{user-bin-dir / applet-bin}}
-    rm -f {{user-desktop-dir / app-id}}.desktop {{user-desktop-dir / applet-id}}.desktop {{user-desktop-dir / app-id}}.Taildrop.desktop
-    rm -f {{user-metainfo-dir / app-id}}.metainfo.xml
-    rm -f {{user-icon-dir}}/apps/{{app-id}}-symbolic.svg
-    rm -f {{user-icon-dir}}/status/{{applet-id}}-*.svg
+    ./scripts/install.sh --uninstall --prefix {{user-base}}

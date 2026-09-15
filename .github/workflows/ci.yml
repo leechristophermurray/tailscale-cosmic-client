@@ -1,0 +1,178 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  # The release workflow runs this in full before publishing anything.
+  workflow_call:
+
+permissions:
+  contents: read
+
+# Unlike the implicit default, an explicit bash runs with -o pipefail.
+defaults:
+  run:
+    shell: bash
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  # A new push to a pull request supersedes the old run; main keeps every run
+  # so each commit there has a result.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+  # Debug info roughly doubles target/ and the cache, and nothing here reads it.
+  CARGO_PROFILE_DEV_DEBUG: 0
+  CARGO_PROFILE_TEST_DEBUG: 0
+  RUST_BACKTRACE: short
+
+jobs:
+  fmt:
+    name: Format
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de # master
+        with:
+          toolchain: "1.98.0"
+          components: rustfmt
+      - run: cargo fmt --all --check
+
+  clippy:
+    name: Clippy
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+        with:
+          components: clippy
+          cache-key: clippy
+      - run: cargo clippy --workspace --all-targets --locked -- -D warnings
+
+  test:
+    name: Test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+        with:
+          cache-key: test
+      - run: cargo test --workspace --locked
+
+  scripts:
+    name: Scripts and packaging
+    runs-on: ubuntu-24.04
+    # desktop-file-utils registered COSMIC as a category in 0.28; Ubuntu 24.04
+    # ships 0.27, which rejects every COSMIC desktop entry, upstream's included.
+    container: registry.fedoraproject.org/fedora:44
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install linters
+        run: dnf install -y -q ShellCheck desktop-file-utils appstream findutils diffutils tar gzip util-linux
+      # The container runs as root; the installer suite re-runs itself as nobody.
+      - name: Tailscale installer scenarios
+        run: ./scripts/test-install-tailscale.sh
+      - name: Install and package scripts
+        run: ./scripts/test-install.sh
+      # STRICT makes a missing linter a failure rather than a skipped check.
+      - name: Shell, desktop entry and AppStream checks
+        run: STRICT=1 ./scripts/check-packaging.sh
+
+  msrv:
+    name: Minimum Rust version
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install system libraries
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends libxkbcommon-dev cmake
+      - name: Read rust-version from Cargo.toml
+        id: msrv
+        run: echo "version=$(sed -n 's/^rust-version = "\(.*\)"/\1/p' Cargo.toml)" >> "$GITHUB_OUTPUT"
+      - uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de # master
+        with:
+          toolchain: ${{ steps.msrv.outputs.version }}
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          shared-key: msrv
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+      - run: cargo check --workspace --locked
+
+  coverage:
+    name: Coverage
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+        with:
+          components: llvm-tools-preview
+          cache-key: coverage
+      - uses: taiki-e/install-action@26e9283f268b880168bdbd2c545dfcd60ec2c6ab # v2.87.13
+        with:
+          tool: cargo-llvm-cov
+      - name: Measure
+        run: ./scripts/coverage.sh | tee coverage.txt
+      - name: Summarise
+        run: |
+          {
+            echo '### Line coverage of product code'
+            echo '```'
+            cat coverage.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: coverage
+          path: target/coverage/lcov.info
+          retention-days: 14
+
+  package:
+    name: Package
+    # Release builds are slow; pull requests get the checks above, and main,
+    # manual runs and releases get a tarball.
+    if: github.event_name != 'pull_request'
+    needs: [fmt, clippy, test, scripts]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+        with:
+          cache-key: release
+      - run: cargo build --release --locked
+      - name: Build tarball
+        run: |
+          # Stamp files with the commit time so a rebuild of this commit is
+          # byte-identical.
+          SOURCE_DATE_EPOCH="$(git log -1 --format=%ct)" ./scripts/package.sh
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: package
+          path: dist/
+          if-no-files-found: error
+          retention-days: 14

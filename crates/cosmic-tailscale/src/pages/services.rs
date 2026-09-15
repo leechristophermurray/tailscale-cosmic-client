@@ -7,8 +7,8 @@ use cosmic::{Apply, Element, theme, widget};
 use tailscale_localapi::{ServeEntry, ServeScope};
 
 use crate::app::message::Message;
-use crate::fl;
 use crate::app::state::State;
+use crate::fl;
 use crate::ui::{Tone, icons, widgets};
 
 pub fn view(state: &State) -> Element<'_, Message> {

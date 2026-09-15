@@ -1,0 +1,41 @@
+name: Set up the build
+description: >
+  System libraries the workspace links against, the pinned Rust toolchain, and
+  a dependency cache that only the main branch writes to.
+
+inputs:
+  components:
+    description: Extra rustup components, comma-separated (e.g. clippy)
+    required: false
+    default: ""
+  cache-key:
+    description: Distinguishes caches of jobs that build different artefacts
+    required: true
+
+runs:
+  using: composite
+  steps:
+    # libxkbcommon is the only library the binaries link against; cmake builds
+    # aws-lc-sys, the TLS backend reqwest uses for the Beszel hub. Found by
+    # building the workspace in a bare ubuntu:24.04 container.
+    - name: Install system libraries
+      shell: bash
+      run: |
+        sudo apt-get update -qq
+        sudo apt-get install -y -qq --no-install-recommends libxkbcommon-dev cmake
+
+    # Keep in step with the toolchain used for development. The crates declare
+    # rust-version = 1.93; the msrv job holds that line.
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de # master
+      with:
+        toolchain: "1.98.0"
+        components: ${{ inputs.components }}
+
+    # Pull requests read the cache but never write it, so a branch cannot
+    # poison what main builds from, and the 10 GB quota is spent on main.
+    - name: Cache dependencies
+      uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+      with:
+        shared-key: ${{ inputs.cache-key }}
+        save-if: ${{ github.ref == 'refs/heads/main' }}

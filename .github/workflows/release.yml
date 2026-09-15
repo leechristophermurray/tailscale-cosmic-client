@@ -1,0 +1,62 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+# Unlike the implicit default, an explicit bash runs with -o pipefail.
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  version:
+    name: Tag matches Cargo.toml
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Compare
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          version="$(sed -n '/^\[workspace.package\]/,/^\[/s/^version = "\(.*\)"/\1/p' Cargo.toml)"
+          if [[ "${TAG#v}" != "$version" ]]; then
+            echo "::error::Tag $TAG does not match the workspace version $version in Cargo.toml"
+            exit 1
+          fi
+
+  ci:
+    name: CI
+    needs: version
+    uses: ./.github/workflows/ci.yml
+
+  publish:
+    name: Publish
+    needs: ci
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    # The only job that can write to the repository, and it runs no build.
+    permissions:
+      contents: write
+    steps:
+      # The tarball CI built and tested in this run, not a rebuild.
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: package
+          path: dist
+      - name: Verify checksums
+        working-directory: dist
+        run: sha256sum -c ./*.sha256
+      - uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
+        with:
+          files: dist/*
+          fail_on_unmatched_files: true
+          generate_release_notes: true
+          # v1.2.0-rc.1 and the like are published as pre-releases.
+          prerelease: ${{ contains(github.ref_name, '-') }}

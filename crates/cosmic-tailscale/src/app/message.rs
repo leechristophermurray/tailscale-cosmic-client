@@ -2,9 +2,7 @@
 
 use std::sync::Arc;
 
-use tailscale_localapi::{
-    FileTarget, Notify, PingResult, Prefs, ServeConfig, Status, WaitingFile,
-};
+use tailscale_localapi::{FileTarget, Notify, PingResult, Prefs, ServeConfig, Status, WaitingFile};
 
 /// A daemon call that failed. The error is pre-rendered because
 /// `tailscale_localapi::Error` is not `Clone`, and messages must be.

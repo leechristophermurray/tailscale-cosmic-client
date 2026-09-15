@@ -206,9 +206,10 @@ pub fn save_waiting_files(api: &LocalApi, names: Vec<String>) -> cosmic::app::Ta
 fn unique_path(dir: &std::path::Path, name: &str) -> PathBuf {
     // Strip any directory components a peer may have put in the name; a
     // received filename must never escape the downloads folder.
-    let name = std::path::Path::new(name)
-        .file_name()
-        .map_or_else(|| "taildrop-file".to_string(), |n| n.to_string_lossy().into_owned());
+    let name = std::path::Path::new(name).file_name().map_or_else(
+        || "taildrop-file".to_string(),
+        |n| n.to_string_lossy().into_owned(),
+    );
 
     let candidate = dir.join(&name);
     if !candidate.exists() {
@@ -216,7 +217,9 @@ fn unique_path(dir: &std::path::Path, name: &str) -> PathBuf {
     }
 
     let path = std::path::Path::new(&name);
-    let stem = path.file_stem().map_or_else(String::new, |s| s.to_string_lossy().into_owned());
+    let stem = path
+        .file_stem()
+        .map_or_else(String::new, |s| s.to_string_lossy().into_owned());
     let extension = path
         .extension()
         .map(|e| format!(".{}", e.to_string_lossy()))

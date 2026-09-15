@@ -1,0 +1,11 @@
+[package]
+name = "http-stub"
+description = "Test-only stand-in HTTP server that records raw requests"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+publish = false
+
+[dependencies]
+tokio.workspace = true

@@ -84,9 +84,7 @@ impl Endpoint {
     /// The value to send as `Host`, which Caddy matches against its origins.
     #[must_use]
     pub fn origin(&self) -> String {
-        self.origin
-            .clone()
-            .unwrap_or_else(|| self.authority())
+        self.origin.clone().unwrap_or_else(|| self.authority())
     }
 }
 
@@ -221,8 +219,7 @@ impl CaddyAdmin {
     pub async fn sites(&self) -> Result<Vec<crate::model::Site>> {
         let servers = self.servers().await?;
 
-        let mut sites: Vec<crate::model::Site> =
-            servers.values().flat_map(Server::sites).collect();
+        let mut sites: Vec<crate::model::Site> = servers.values().flat_map(Server::sites).collect();
         sites.sort_by(|a, b| a.host.cmp(&b.host).then_with(|| a.path.cmp(&b.path)));
         Ok(sites)
     }

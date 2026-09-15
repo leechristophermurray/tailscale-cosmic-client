@@ -256,10 +256,7 @@ impl cosmic::Application for App {
                 if connected {
                     self.state.suspended_until = None;
                 }
-                return action::apply_prefs(
-                    &self.api,
-                    MaskedPrefs::new().want_running(connected),
-                );
+                return action::apply_prefs(&self.api, MaskedPrefs::new().want_running(connected));
             }
 
             Message::LoginRequested => return action::login(&self.api),
@@ -323,10 +320,7 @@ impl cosmic::Application for App {
                     routes.push("0.0.0.0/0".to_string());
                     routes.push("::/0".to_string());
                 }
-                return action::apply_prefs(
-                    &self.api,
-                    MaskedPrefs::new().advertise_routes(routes),
-                );
+                return action::apply_prefs(&self.api, MaskedPrefs::new().advertise_routes(routes));
             }
 
             // ---- preference switches ---------------------------------------
@@ -501,12 +495,11 @@ impl cosmic::Application for App {
                     return action::choose_files(Some(id));
                 }
 
-                let Some(peer) = self
-                    .state
-                    .status
-                    .as_deref()
-                    .and_then(|s| s.peer_by_id(&id))
+                let Some(peer) = self.state.status.as_deref().and_then(|s| s.peer_by_id(&id))
                 else {
+                    // The machine dropped off since it was chosen. Leave the
+                    // files queued so choosing another is all it takes.
+                    self.state.error = Some(fl!("taildrop-machine-gone"));
                     return Task::none();
                 };
 
@@ -549,6 +542,10 @@ impl cosmic::Application for App {
             }
 
             Message::CaddyConnect => {
+                if self.state.caddy.target.is_none() {
+                    return Task::none();
+                }
+
                 let Some(host) = self
                     .state
                     .caddy
@@ -557,6 +554,10 @@ impl cosmic::Application for App {
                     .and_then(|id| self.state.status.as_deref()?.peer_by_id(id))
                     .map(|peer| peer.magic_dns().to_string())
                 else {
+                    // Most often a remembered machine that has since left the
+                    // tailnet. Saying so beats a page stuck on "Not connected".
+                    self.state.caddy.connection =
+                        caddy::Connection::Failed(fl!("caddy-machine-gone"));
                     return Task::none();
                 };
 
@@ -667,20 +668,26 @@ impl cosmic::Application for App {
                 self.state.beszel.connection = beszel::HubConnection::Connected;
                 self.state.beszel.token = Some(session.token.clone());
                 self.state.beszel.hub_key.clone_from(&session.hub_key);
-                self.state.beszel.hub_version.clone_from(&session.hub_version);
+                self.state
+                    .beszel
+                    .hub_version
+                    .clone_from(&session.hub_version);
                 self.state.beszel.systems.clone_from(&session.systems);
                 self.state.beszel.password_stored = true;
 
+                let warnings = self.beszel_threshold_warnings();
+
                 // Keep showing whichever machine was open, if the hub still
-                // knows about it.
+                // knows about it. This must not return early: doing so once
+                // skipped the hardware warnings whenever a machine was open.
                 if let Some(selected) = self.state.beszel.selected.clone() {
                     if self.state.beszel.systems.iter().any(|s| s.id == selected) {
-                        return self.load_beszel_detail(selected);
+                        return Task::batch([warnings, self.load_beszel_detail(selected)]);
                     }
                     self.state.beszel.selected = None;
                 }
 
-                return self.beszel_threshold_warnings();
+                return warnings;
             }
 
             Message::BeszelConnected(Err(failure)) => {
@@ -775,11 +782,21 @@ impl cosmic::Application for App {
             }
 
             Message::BeszelRefresh => {
-                if !self.state.beszel.connection.is_connected() {
+                // Keep trying through an outage, so the page recovers on its own
+                // when the hub comes back. Stop only where retrying cannot help:
+                // nothing configured, a sign-in already in flight, or
+                // credentials the hub has refused, which would otherwise be
+                // resent every minute.
+                if matches!(
+                    self.state.beszel.connection,
+                    beszel::HubConnection::Unconfigured
+                        | beszel::HubConnection::Connecting
+                        | beszel::HubConnection::NeedsSignIn
+                ) {
                     return Task::none();
                 }
                 let (url, user, password) = self.beszel_credentials();
-                if url.is_empty() {
+                if url.is_empty() || password.is_empty() {
                     return Task::none();
                 }
                 // Hands the existing session back, so a routine refresh sends
@@ -804,8 +821,10 @@ impl cosmic::Application for App {
                 }
 
                 let host = peer.magic_dns().to_string();
-                let install =
-                    beszel_client::AgentInstall::new(host.clone(), self.state.beszel.hub_key.clone());
+                let install = beszel_client::AgentInstall::new(
+                    host.clone(),
+                    self.state.beszel.hub_key.clone(),
+                );
 
                 // Only propose. The command is shown and nothing runs until the
                 // user says yes.
@@ -1056,7 +1075,10 @@ impl App {
             let mut reasons: Vec<String> = Vec::new();
 
             if system.info.disk_pct >= 90.0 {
-                reasons.push(fl!("beszel-alert-disk", pct = format!("{:.0}", system.info.disk_pct)));
+                reasons.push(fl!(
+                    "beszel-alert-disk",
+                    pct = format!("{:.0}", system.info.disk_pct)
+                ));
             }
             if system.info.memory_pct >= 92.0 {
                 reasons.push(fl!(
@@ -1175,7 +1197,12 @@ impl App {
 
         let version = self.state.status.as_deref().map_or_else(
             || fl!("status-unknown-version"),
-            |status| fl!("status-tailscale-version", version = status.version.as_str()),
+            |status| {
+                fl!(
+                    "status-tailscale-version",
+                    version = status.version.as_str()
+                )
+            },
         );
 
         let tone = if self.state.daemon_unreachable {
@@ -1212,7 +1239,10 @@ impl App {
                 if self.state.throughput.live_derps == 1 {
                     fl!("status-relays-one")
                 } else {
-                    fl!("status-relays-many", count = self.state.throughput.live_derps)
+                    fl!(
+                        "status-relays-many",
+                        count = self.state.throughput.live_derps
+                    )
                 },
             ));
         }
@@ -1221,5 +1251,644 @@ impl App {
             .padding([spacing.space_xxs, spacing.space_s])
             .width(Length::Fill)
             .into()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    //! The update loop, driven directly.
+    //!
+    //! `update` returns tasks rather than running them, so these tests observe
+    //! two things: how the state changed, and whether any work was started
+    //! (`Task::units() > 0`). Nothing here reaches the network, the desktop or
+    //! the real config store.
+
+    use super::*;
+    use cosmic::Application as _;
+    use tailscale_localapi::{BackendState, Status};
+
+    /// The redacted real daemon capture, shared with the parsing tests.
+    fn status() -> Arc<Status> {
+        Arc::new(
+            serde_json::from_str(include_str!(
+                "../../../tailscale-localapi/tests/fixtures/status.json"
+            ))
+            .expect("fixture decodes"),
+        )
+    }
+
+    fn app() -> App {
+        let mut nav = nav_bar::Model::default();
+        for page in Page::ALL {
+            nav.insert().text(page.title()).data(page);
+        }
+        nav.activate_position(0);
+
+        App {
+            core: Core::default(),
+            nav,
+            // A socket that does not exist, so a task that did run by mistake
+            // would fail rather than touch the real daemon.
+            api: LocalApi::with_socket("/nonexistent/tailscaled.sock"),
+            state: State::default(),
+            // No config store: persistence is covered by the config tests, and
+            // these must never write to the user's real settings.
+            config_handler: None,
+        }
+    }
+
+    fn connected_app() -> App {
+        let mut app = app();
+        let _ = app.update(Message::StatusLoaded(Ok(status())));
+        app
+    }
+
+    fn prefs(json: &str) -> Arc<tailscale_localapi::Prefs> {
+        Arc::new(serde_json::from_str(json).expect("prefs decode"))
+    }
+
+    fn failure(message: &str, unreachable: bool) -> Failure {
+        Failure {
+            message: message.to_string(),
+            unreachable,
+        }
+    }
+
+    fn started(task: &Task<Message>) -> bool {
+        task.units() > 0
+    }
+
+    /// Any peer that can receive Taildrop, by stable id.
+    fn receiving_peer(app: &App) -> String {
+        app.state
+            .status
+            .as_deref()
+            .expect("status")
+            .peer
+            .values()
+            .find(|peer| peer.online && peer.can_receive_files())
+            .expect("fixture has a receiving peer")
+            .id
+            .clone()
+    }
+
+    // ---- daemon state ------------------------------------------------------
+
+    #[test]
+    fn a_status_poll_sets_the_backend_only_when_the_bus_has_not() {
+        let mut app = app();
+        let _ = app.update(Message::StatusLoaded(Ok(status())));
+        assert_eq!(app.state.backend, BackendState::Running);
+
+        // The bus is the fresher source: a later poll must not overwrite it.
+        let _ = app.update(Message::DaemonEvent(Arc::new(tailscale_localapi::Notify {
+            state: Some(BackendState::Stopped),
+            ..Default::default()
+        })));
+        let _ = app.update(Message::StatusLoaded(Ok(status())));
+        assert_eq!(app.state.backend, BackendState::Stopped);
+    }
+
+    #[test]
+    fn an_unreachable_daemon_is_reported_and_cleared_on_recovery() {
+        let mut app = app();
+        let _ = app.update(Message::StatusLoaded(Err(failure("socket gone", true))));
+
+        assert!(app.state.daemon_unreachable);
+        assert_eq!(app.state.backend, BackendState::Unknown);
+        assert!(app.state.error.is_some());
+
+        let _ = app.update(Message::StatusLoaded(Ok(status())));
+        assert!(!app.state.daemon_unreachable);
+        assert!(
+            app.state.error.is_none(),
+            "recovery clears the daemon error"
+        );
+    }
+
+    #[test]
+    fn a_prefs_write_that_fails_unlocks_the_switches() {
+        let mut app = connected_app();
+        let _ = app.update(Message::SetConnected(false));
+        assert!(
+            app.state.writing_prefs,
+            "switches lock while a write is in flight"
+        );
+
+        let _ = app.update(Message::PrefsApplied(Err(failure("access denied", false))));
+        assert!(
+            !app.state.writing_prefs,
+            "a failed write must not leave them locked"
+        );
+        assert_eq!(app.state.error.as_deref(), Some("access denied"));
+    }
+
+    #[test]
+    fn applied_prefs_unlock_and_reread_the_peer_map() {
+        let mut app = connected_app();
+        let _ = app.update(Message::SetConnected(true));
+
+        let task = app.update(Message::PrefsApplied(Ok(prefs(r#"{"WantRunning":true}"#))));
+        assert!(!app.state.writing_prefs);
+        assert!(app.state.want_running());
+        assert!(
+            started(&task),
+            "a prefs change re-reads which peers are reachable"
+        );
+    }
+
+    #[test]
+    fn bus_frames_update_state_prefs_throughput_and_login() {
+        let mut app = connected_app();
+
+        let task = app.update(Message::DaemonEvent(Arc::new(tailscale_localapi::Notify {
+            state: Some(BackendState::NeedsLogin),
+            prefs: Some(serde_json::from_str(r#"{"WantRunning":false}"#).unwrap()),
+            browse_to_url: Some("https://login.tailscale.com/a/xyz".into()),
+            err_message: Some("key expired".into()),
+            ..Default::default()
+        })));
+
+        assert_eq!(app.state.backend, BackendState::NeedsLogin);
+        assert!(!app.state.want_running());
+        assert!(
+            app.state.notice.is_some(),
+            "the user is told to finish in the browser"
+        );
+        assert_eq!(app.state.error.as_deref(), Some("key expired"));
+        assert!(
+            started(&task),
+            "a state change re-reads status, and the URL opens"
+        );
+    }
+
+    #[test]
+    fn engine_counters_become_a_rate_after_two_samples() {
+        let mut app = connected_app();
+        let engine = |rx, tx| {
+            Message::DaemonEvent(Arc::new(tailscale_localapi::Notify {
+                engine: Some(
+                    serde_json::from_str(&format!(
+                        r#"{{"RBytes":{rx},"WBytes":{tx},"NumLive":1,"LiveDERPs":1}}"#
+                    ))
+                    .unwrap(),
+                ),
+                ..Default::default()
+            }))
+        };
+
+        let _ = app.update(engine(1_000, 500));
+        assert!(
+            !app.state.throughput.has_rate(),
+            "one sample cannot make a rate"
+        );
+
+        std::thread::sleep(std::time::Duration::from_millis(250));
+        let _ = app.update(engine(51_000, 10_500));
+        assert!(app.state.throughput.has_rate());
+        assert!(app.state.throughput.rx_per_second > 0.0);
+    }
+
+    // ---- connection and suspend -----------------------------------------------
+
+    #[test]
+    fn reconnecting_by_hand_cancels_a_suspend() {
+        let mut app = connected_app();
+        let _ = app.update(Message::SuspendRequested);
+        assert!(app.state.suspended_until.is_some());
+
+        let _ = app.update(Message::SetConnected(true));
+        assert!(app.state.suspended_until.is_none());
+
+        // So the timer firing later must not do anything.
+        let task = app.update(Message::SuspendElapsed);
+        assert!(!started(&task));
+    }
+
+    #[test]
+    fn a_suspend_resumes_the_tunnel_when_it_elapses() {
+        let mut app = connected_app();
+        let _ = app.update(Message::SuspendRequested);
+        let _ = app.update(Message::PrefsApplied(Ok(prefs(r#"{"WantRunning":false}"#))));
+
+        let task = app.update(Message::SuspendElapsed);
+        assert!(started(&task), "the tunnel is brought back up");
+        assert!(app.state.writing_prefs);
+    }
+
+    // ---- exit nodes -------------------------------------------------------------
+
+    #[test]
+    fn choosing_direct_mesh_writes_and_an_invalid_index_does_not() {
+        let mut app = connected_app();
+
+        let task = app.update(Message::ExitNodeSelected(0));
+        assert!(started(&task));
+        assert!(app.state.writing_prefs);
+
+        let mut app = connected_app();
+        let task = app.update(Message::ExitNodeSelected(99));
+        assert!(!started(&task));
+        assert!(
+            !app.state.writing_prefs,
+            "a bad index must not lock the switches"
+        );
+    }
+
+    #[test]
+    fn a_ping_result_is_stored_and_its_spinner_cleared() {
+        let mut app = connected_app();
+        let id = receiving_peer(&app);
+        app.state.pinging.insert(id.clone(), ());
+
+        let result: tailscale_localapi::PingResult =
+            serde_json::from_str(r#"{"Err":"no route","LatencySeconds":0}"#).unwrap();
+        let _ = app.update(Message::PingCompleted(id.clone(), Ok(Arc::new(result))));
+
+        assert!(!app.state.pinging.contains_key(&id));
+        assert!(app.state.pings.contains_key(&id));
+        // A probe that failed is a result shown on the row, not a banner.
+        assert!(app.state.error.is_none());
+    }
+
+    // ---- taildrop ----------------------------------------------------------------
+
+    #[test]
+    fn a_drop_with_no_local_files_explains_itself() {
+        let mut app = connected_app();
+        let task = app.update(Message::UriListDropped(
+            "text/uri-list".into(),
+            Arc::new(b"https://example.com/page\r\n".to_vec()),
+        ));
+
+        assert!(!started(&task));
+        assert!(app.state.pending_drop.is_empty());
+        assert!(app.state.notice.is_some(), "an inert drop must say why");
+    }
+
+    #[test]
+    fn choosing_a_target_with_files_queued_sends_them() {
+        let mut app = connected_app();
+        let id = receiving_peer(&app);
+        let _ = app.update(Message::FilesDropped(Arc::new(vec!["/tmp/a.txt".into()])));
+
+        let task = app.update(Message::TaildropSelectTarget(id.clone()));
+        assert_eq!(app.state.taildrop_target.as_deref(), Some(id.as_str()));
+        assert!(
+            started(&task),
+            "files plus a destination is the whole instruction"
+        );
+    }
+
+    #[test]
+    fn send_with_nothing_queued_opens_the_chooser_instead_of_failing() {
+        let mut app = connected_app();
+        let id = receiving_peer(&app);
+
+        let task = app.update(Message::SendPendingTo(id));
+        assert!(started(&task), "the file chooser opens");
+        assert!(app.state.error.is_none());
+    }
+
+    #[test]
+    fn sending_to_a_known_machine_takes_the_queue() {
+        let mut app = connected_app();
+        let id = receiving_peer(&app);
+        app.state.pending_drop = vec!["/tmp/a.txt".into()];
+
+        let task = app.update(Message::SendPendingTo(id));
+        assert!(started(&task));
+        assert!(app.state.pending_drop.is_empty());
+    }
+
+    /// The target can vanish between choosing it and sending — it went offline
+    /// and dropped from the peer map. That must be reported, not ignored.
+    #[test]
+    fn sending_to_a_machine_that_has_gone_says_so() {
+        let mut app = connected_app();
+        app.state.pending_drop = vec!["/tmp/a.txt".into()];
+
+        let task = app.update(Message::SendPendingTo("nGONE".into()));
+
+        assert!(!started(&task));
+        assert!(
+            app.state.error.is_some(),
+            "a send that cannot happen must not be silent"
+        );
+        assert_eq!(
+            app.state.pending_drop.len(),
+            1,
+            "and the files stay queued to retry"
+        );
+    }
+
+    #[test]
+    fn chosen_files_for_a_machine_send_immediately() {
+        let mut app = connected_app();
+        let id = receiving_peer(&app);
+
+        let task = app.update(Message::FilesChosen(
+            Some(id),
+            Arc::new(vec!["/tmp/a".into()]),
+        ));
+        assert!(started(&task));
+
+        let task = app.update(Message::FilesChosen(None, Arc::new(vec!["/tmp/b".into()])));
+        assert!(
+            !started(&task),
+            "with no destination they wait in the queue"
+        );
+        assert_eq!(app.state.pending_drop.len(), 1);
+    }
+
+    #[test]
+    fn received_files_are_announced_once() {
+        let mut app = connected_app();
+        let files = || {
+            Arc::new(vec![tailscale_localapi::WaitingFile {
+                name: "photo.jpg".into(),
+                size: 2048,
+            }])
+        };
+
+        let first = app.update(Message::WaitingFilesLoaded(Ok(files())));
+        let second = app.update(Message::WaitingFilesLoaded(Ok(files())));
+
+        assert!(started(&first), "a new arrival notifies");
+        assert!(!started(&second), "the same file on the next poll does not");
+    }
+
+    // ---- caddy -----------------------------------------------------------------
+
+    /// A remembered machine that is no longer on the tailnet must not leave the
+    /// page sitting at "Not connected" with no explanation.
+    #[test]
+    fn connecting_to_a_caddy_machine_that_has_gone_says_so() {
+        let mut app = connected_app();
+        app.state.caddy.target = Some("nGONE".into());
+
+        let task = app.update(Message::CaddyConnect);
+
+        assert!(!started(&task));
+        assert!(
+            matches!(app.state.caddy.connection, caddy::Connection::Failed(_)),
+            "expected Failed, got {:?}",
+            app.state.caddy.connection
+        );
+    }
+
+    #[test]
+    fn a_failed_caddy_connection_is_shown() {
+        let mut app = connected_app();
+        let _ = app.update(Message::CaddyConnected(Err(failure("tunnel closed", true))));
+        assert!(
+            matches!(app.state.caddy.connection, caddy::Connection::Failed(ref m) if m == "tunnel closed")
+        );
+    }
+
+    #[test]
+    fn an_add_route_with_an_empty_field_does_nothing() {
+        let mut app = connected_app();
+        app.state.caddy.connection =
+            caddy::Connection::Direct(caddy_admin::Endpoint::tailnet("100.64.0.1"));
+        app.state.caddy.new_host = "app.example.ts.net".into();
+
+        let task = app.update(Message::CaddyAddRoute);
+        assert!(!started(&task));
+        assert!(!app.state.caddy.busy);
+    }
+
+    // ---- beszel -----------------------------------------------------------------
+
+    fn session(systems: &str) -> Arc<beszel::Session> {
+        Arc::new(beszel::Session {
+            token: "tok".into(),
+            systems: serde_json::from_str(systems).expect("systems decode"),
+            hub_key: "ssh-ed25519 AAAA".into(),
+            hub_version: "0.18.7".into(),
+        })
+    }
+
+    #[test]
+    fn connecting_stores_the_session_token() {
+        let mut app = connected_app();
+        let _ = app.update(Message::BeszelConnected(Ok(session("[]"))));
+
+        assert!(app.state.beszel.connection.is_connected());
+        assert_eq!(app.state.beszel.token.as_deref(), Some("tok"));
+        assert_eq!(app.state.beszel.hub_key, "ssh-ed25519 AAAA");
+    }
+
+    #[test]
+    fn rejected_credentials_clear_the_token_and_ask_to_sign_in() {
+        let mut app = connected_app();
+        let _ = app.update(Message::BeszelConnected(Ok(session("[]"))));
+        let _ = app.update(Message::BeszelConnected(Err(failure(
+            "credentials rejected",
+            false,
+        ))));
+
+        assert!(app.state.beszel.token.is_none());
+        assert!(matches!(
+            app.state.beszel.connection,
+            beszel::HubConnection::NeedsSignIn
+        ));
+
+        // Wrong credentials must not be retried in the background.
+        let task = app.update(Message::BeszelRefresh);
+        assert!(
+            !started(&task),
+            "a rejected password is not hammered every minute"
+        );
+    }
+
+    /// One dropped refresh must not stop monitoring until the user notices.
+    #[test]
+    fn a_transient_hub_outage_keeps_refreshing() {
+        let mut app = connected_app();
+        app.state.config.beszel_url = "https://mon.example.com".into();
+        app.state.config.beszel_user = "you@example.com".into();
+        app.state.beszel.password_input = "pw".into();
+        let _ = app.update(Message::BeszelConnected(Ok(session("[]"))));
+
+        let _ = app.update(Message::BeszelConnected(Err(failure(
+            "no route to host",
+            true,
+        ))));
+        assert!(matches!(
+            app.state.beszel.connection,
+            beszel::HubConnection::Unreachable(_)
+        ));
+
+        let task = app.update(Message::BeszelRefresh);
+        assert!(
+            started(&task),
+            "the next refresh must still try, so the page recovers"
+        );
+    }
+
+    #[test]
+    fn typing_a_new_password_forgets_that_one_was_stored() {
+        let mut app = app();
+        app.state.beszel.password_stored = true;
+        let _ = app.update(Message::BeszelPasswordChanged("new".into()));
+        assert!(!app.state.beszel.password_stored);
+    }
+
+    #[test]
+    fn signing_out_keeps_the_address_but_drops_the_session() {
+        let mut app = connected_app();
+        app.state.config.beszel_url = "https://mon.example.com".into();
+        app.state.config.beszel_user = "you@example.com".into();
+        let _ = app.update(Message::BeszelConnected(Ok(session("[]"))));
+
+        let _ = app.update(Message::BeszelSignOut);
+
+        assert!(!app.state.beszel.connection.is_connected());
+        assert!(app.state.beszel.token.is_none());
+        assert!(app.state.beszel.password_input.is_empty());
+        assert_eq!(app.state.beszel.url_input, "https://mon.example.com");
+        assert_eq!(app.state.beszel.user_input, "you@example.com");
+    }
+
+    const UNHEALTHY: &str = r#"[{"id":"s1","name":"nas","status":"up",
+        "info":{"dp":97.0,"mp":20.0,"t":8,"la":[0.5,0.5,0.5]}}]"#;
+
+    #[test]
+    fn a_hardware_problem_warns_once_until_it_recovers() {
+        let mut app = connected_app();
+
+        let first = app.update(Message::BeszelConnected(Ok(session(UNHEALTHY))));
+        let again = app.update(Message::BeszelConnected(Ok(session(UNHEALTHY))));
+        assert!(started(&first), "a full disk notifies");
+        assert!(!started(&again), "and does not repeat every refresh");
+
+        let healthy = r#"[{"id":"s1","name":"nas","status":"up","info":{"dp":40.0}}]"#;
+        let _ = app.update(Message::BeszelConnected(Ok(session(healthy))));
+        let relapse = app.update(Message::BeszelConnected(Ok(session(UNHEALTHY))));
+        assert!(started(&relapse), "recovering re-arms the warning");
+    }
+
+    /// Opening a machine's detail must not switch off hardware warnings.
+    #[test]
+    fn warnings_still_fire_while_a_machine_is_selected() {
+        let mut app = connected_app();
+        app.state.config.beszel_url = "https://mon.example.com".into();
+        app.state.beszel.token = Some("tok".into());
+        app.state.beszel.selected = Some("s1".into());
+
+        let _ = app.update(Message::BeszelConnected(Ok(session(UNHEALTHY))));
+        assert!(
+            app.state.beszel.warned.contains("s1"),
+            "the disk warning was skipped because a machine was open"
+        );
+    }
+
+    #[test]
+    fn a_selection_the_hub_no_longer_knows_is_cleared() {
+        let mut app = connected_app();
+        app.state.beszel.selected = Some("gone".into());
+        let _ = app.update(Message::BeszelConnected(Ok(session("[]"))));
+        assert!(app.state.beszel.selected.is_none());
+    }
+
+    #[test]
+    fn detail_for_another_machine_does_not_replace_the_open_history() {
+        let mut app = connected_app();
+        app.state.beszel.selected = Some("open".into());
+        app.state.beszel.history = vec![
+            serde_json::from_str(
+                r#"{"id":"r","system":"open","type":"1m","created":"x","stats":{"cpu":1.0}}"#,
+            )
+            .unwrap(),
+        ];
+
+        let late = beszel::Detail {
+            stats: None,
+            containers: vec![],
+            history: vec![],
+        };
+        let _ = app.update(Message::BeszelDetailLoaded(
+            "other".into(),
+            Ok(Arc::new(late)),
+        ));
+
+        assert_eq!(
+            app.state.beszel.history.len(),
+            1,
+            "a late reply for another machine is ignored"
+        );
+    }
+
+    // ---- agent deployment ------------------------------------------------------
+
+    #[test]
+    fn proposing_an_install_runs_nothing_and_shows_the_command() {
+        let mut app = connected_app();
+        app.state.beszel.hub_key = "ssh-ed25519 AAAA".into();
+        let id = receiving_peer(&app);
+
+        let task = app.update(Message::BeszelProposeInstall(id));
+
+        assert!(!started(&task), "proposing must never start the install");
+        let pending = app
+            .state
+            .beszel
+            .pending_install
+            .as_ref()
+            .expect("a proposal");
+        assert!(pending.command.contains("sudo"), "the root step is visible");
+    }
+
+    #[test]
+    fn an_install_cannot_be_proposed_without_the_hub_key() {
+        let mut app = connected_app();
+        let id = receiving_peer(&app);
+
+        let _ = app.update(Message::BeszelProposeInstall(id));
+        assert!(app.state.beszel.pending_install.is_none());
+        assert!(app.state.error.is_some());
+    }
+
+    #[test]
+    fn only_confirming_starts_the_install_and_cancel_discards_it() {
+        let mut app = connected_app();
+        app.state.beszel.hub_key = "ssh-ed25519 AAAA".into();
+        let id = receiving_peer(&app);
+
+        let _ = app.update(Message::BeszelProposeInstall(id.clone()));
+        let _ = app.update(Message::BeszelCancelInstall);
+        assert!(app.state.beszel.pending_install.is_none());
+        let task = app.update(Message::BeszelConfirmInstall);
+        assert!(!started(&task), "nothing to confirm after cancelling");
+
+        let _ = app.update(Message::BeszelProposeInstall(id.clone()));
+        let task = app.update(Message::BeszelConfirmInstall);
+        assert!(started(&task));
+        assert!(app.state.beszel.installing.contains_key(&id));
+    }
+
+    #[test]
+    fn an_install_outcome_is_reported_either_way() {
+        let mut app = connected_app();
+        app.state.beszel.installing.insert("n1".into(), ());
+
+        let failed = beszel_client::InstallOutcome {
+            succeeded: false,
+            output: "downloading\npermission denied".into(),
+        };
+        let _ = app.update(Message::BeszelAgentInstalled("n1".into(), Arc::new(failed)));
+
+        assert!(!app.state.beszel.installing.contains_key("n1"));
+        assert!(
+            app.state
+                .error
+                .as_deref()
+                .is_some_and(|e| e.contains("permission denied"))
+        );
+        assert!(
+            app.state.beszel.last_install.is_some(),
+            "the transcript is kept to read"
+        );
     }
 }

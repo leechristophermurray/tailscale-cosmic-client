@@ -31,10 +31,10 @@ pub mod transport;
 
 pub use client::LocalApi;
 pub use error::{Error, Result};
+pub use model::ping::PingType;
+pub use model::status::Route;
 pub use model::{
     BackendState, FileTarget, MaskedPrefs, Notify, PeerStatus, PingResult, Prefs, ServeConfig,
     ServeEntry, ServeScope, Status, TailnetStatus, UserProfile, WaitingFile,
 };
-pub use model::ping::PingType;
-pub use model::status::Route;
 pub use transport::{DEFAULT_SOCKET, Transport};

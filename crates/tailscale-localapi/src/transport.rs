@@ -75,9 +75,13 @@ impl Transport {
         });
 
         let has_body = body.is_some();
+        // Origin-form (just the path) with an explicit Host. An absolute URL
+        // here produces an absolute-form request line, which HTTP/1.1 reserves
+        // for proxies; it only worked because tailscaled happens to derive
+        // Host from the URL. The same shape broke the Caddy client outright.
         let mut request = Request::builder()
             .method(method)
-            .uri(format!("http://{HOST}{path}"))
+            .uri(path)
             .header(hyper::header::HOST, HOST)
             .header(CSRF_HEADER, CSRF_VALUE);
 

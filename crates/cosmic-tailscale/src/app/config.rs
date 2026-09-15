@@ -5,9 +5,7 @@
 //! and the account name to reach it as, both of which the user typed and
 //! neither of which is worth protecting.
 
-use cosmic::cosmic_config::{
-    self, CosmicConfigEntry, cosmic_config_derive::CosmicConfigEntry,
-};
+use cosmic::cosmic_config::{self, CosmicConfigEntry, cosmic_config_derive::CosmicConfigEntry};
 
 pub const CONFIG_VERSION: u64 = 1;
 
@@ -33,7 +31,10 @@ impl Config {
     /// the application from starting.
     #[must_use]
     pub fn load() -> (Option<cosmic_config::Config>, Self) {
-        match cosmic_config::Config::new(<super::App as cosmic::Application>::APP_ID, CONFIG_VERSION) {
+        match cosmic_config::Config::new(
+            <super::App as cosmic::Application>::APP_ID,
+            CONFIG_VERSION,
+        ) {
             Ok(handler) => {
                 let config = Self::get_entry(&handler).unwrap_or_else(|(errors, config)| {
                     for error in errors {

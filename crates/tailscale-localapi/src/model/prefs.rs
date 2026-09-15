@@ -51,9 +51,9 @@ impl Prefs {
     /// exit node for the rest of the tailnet.
     #[must_use]
     pub fn advertises_exit_node(&self) -> bool {
-        self.advertise_routes.as_ref().is_some_and(|routes| {
-            routes.iter().any(|r| r == "0.0.0.0/0" || r == "::/0")
-        })
+        self.advertise_routes
+            .as_ref()
+            .is_some_and(|routes| routes.iter().any(|r| r == "0.0.0.0/0" || r == "::/0"))
     }
 
     /// Advertised routes with the two exit-node default routes filtered out, so
@@ -98,7 +98,10 @@ pub struct MaskedPrefs {
     #[serde(rename = "ExitNodeIDSet", skip_serializing_if = "std::ops::Not::not")]
     exit_node_id_set: bool,
 
-    #[serde(rename = "ExitNodeAllowLANAccess", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ExitNodeAllowLANAccess",
+        skip_serializing_if = "Option::is_none"
+    )]
     exit_node_allow_lan_access: Option<bool>,
     #[serde(
         rename = "ExitNodeAllowLANAccessSet",

@@ -45,7 +45,10 @@ fn hub_card(state: &State) -> Element<'_, Message> {
     let beszel = &state.beszel;
 
     let mut column = widget::Column::new()
-        .push(widgets::section_header(icons::MONITORING, fl!("beszel-hub")))
+        .push(widgets::section_header(
+            icons::MONITORING,
+            fl!("beszel-hub"),
+        ))
         .spacing(spacing.space_s);
 
     column = column.push(match &beszel.connection {
@@ -53,9 +56,7 @@ fn hub_card(state: &State) -> Element<'_, Message> {
             fl!("beszel-connected", version = beszel.hub_version.as_str()),
             Tone::Positive,
         ),
-        HubConnection::Connecting => {
-            widgets::status_label(fl!("beszel-connecting"), Tone::Caution)
-        }
+        HubConnection::Connecting => widgets::status_label(fl!("beszel-connecting"), Tone::Caution),
         HubConnection::NeedsSignIn => {
             widgets::status_label(fl!("beszel-needs-signin"), Tone::Critical)
         }
@@ -118,15 +119,10 @@ fn sign_in_form(beszel: &BeszelState) -> Element<'_, Message> {
                         .width(Length::FillPortion(1)),
                 )
                 .push(
-                    widget::text_input::secure_input(
-                        "",
-                        &beszel.password_input,
-                        None,
-                        true,
-                    )
-                    .label(fl!("beszel-password"))
-                    .on_input(Message::BeszelPasswordChanged)
-                    .width(Length::FillPortion(1)),
+                    widget::text_input::secure_input("", &beszel.password_input, None, true)
+                        .label(fl!("beszel-password"))
+                        .on_input(Message::BeszelPasswordChanged)
+                        .width(Length::FillPortion(1)),
                 )
                 .spacing(spacing.space_xs)
                 .width(Length::Fill),
@@ -194,7 +190,10 @@ fn system_row<'a>(state: &'a State, system: &'a SystemRecord) -> Element<'a, Mes
     let version = if system.info.agent_version.is_empty()
         || system.info.agent_version == state.beszel.hub_version
     {
-        fl!("beszel-agent-version", version = system.info.agent_version.as_str())
+        fl!(
+            "beszel-agent-version",
+            version = system.info.agent_version.as_str()
+        )
     } else {
         fl!(
             "beszel-agent-outdated",
@@ -238,9 +237,9 @@ fn system_row<'a>(state: &'a State, system: &'a SystemRecord) -> Element<'a, Mes
         .padding(spacing.space_xs)
         .width(Length::Fill)
         .selected(selected)
-        .class(theme::Button::ListItem([
-            theme::active().cosmic().corner_radii.radius_s[0]; 4
-        ]))
+        .class(theme::Button::ListItem(
+            [theme::active().cosmic().corner_radii.radius_s[0]; 4],
+        ))
         .on_press(Message::BeszelSelectSystem(system.id.clone()))
         .into()
 }
@@ -373,229 +372,256 @@ fn charts(beszel: &BeszelState) -> Element<'_, Message> {
             .push(period_picker(beszel))
             .push(widget::text::caption(fl!("beszel-history-thin")))
             .spacing(spacing.space_xs)
-            .into()
-            ;
+            .into();
     }
-
-    let series = |pick: fn(&beszel_client::StatsRecord) -> f64| -> Vec<f64> {
-        history.iter().map(pick).collect()
-    };
-
-    // Single series: the desktop accent, filled. No legend — the title says
-    // what it is.
-    let cpu = chart::Chart::new(
-        vec![
-            chart::Series::new(
-                fl!("beszel-cpu"),
-                chart::SeriesColor::Accent,
-                series(|r| r.stats.cpu),
-            )
-            .filled(),
-        ],
-        chart::Scale::Percent,
-    );
-
-    let memory = chart::Chart::new(
-        vec![
-            chart::Series::new(
-                fl!("beszel-memory"),
-                chart::SeriesColor::Accent,
-                series(|r| r.stats.memory_pct),
-            )
-            .filled(),
-        ],
-        chart::Scale::Percent,
-    );
-
-    let disk = chart::Chart::new(
-        vec![
-            chart::Series::new(
-                fl!("beszel-disk"),
-                chart::SeriesColor::Accent,
-                series(|r| r.stats.disk_pct),
-            )
-            .filled(),
-        ],
-        chart::Scale::Percent,
-    );
-
-    // Two series, same units, one axis — never a second y-scale.
-    let disk_io = chart::Chart::new(
-        vec![
-            chart::Series::new(
-                fl!("beszel-read"),
-                chart::SeriesColor::Slot(0),
-                series(|r| r.stats.disk_io[0] as f64),
-            ),
-            chart::Series::new(
-                fl!("beszel-write"),
-                chart::SeriesColor::Slot(1),
-                series(|r| r.stats.disk_io[1] as f64),
-            ),
-        ],
-        chart::Scale::Rate,
-    );
-
-    let bandwidth = chart::Chart::new(
-        vec![
-            chart::Series::new(
-                fl!("beszel-sent"),
-                chart::SeriesColor::Slot(0),
-                series(|r| r.stats.bandwidth_sent() as f64),
-            ),
-            chart::Series::new(
-                fl!("beszel-received"),
-                chart::SeriesColor::Slot(1),
-                series(|r| r.stats.bandwidth_received() as f64),
-            ),
-        ],
-        chart::Scale::Rate,
-    );
-
-    let load = chart::Chart::new(
-        vec![
-            chart::Series::new(
-                fl!("beszel-load-1"),
-                chart::SeriesColor::Slot(0),
-                series(|r| r.stats.load_average[0]),
-            ),
-            chart::Series::new(
-                fl!("beszel-load-5"),
-                chart::SeriesColor::Slot(1),
-                series(|r| r.stats.load_average[1]),
-            ),
-            chart::Series::new(
-                fl!("beszel-load-15"),
-                chart::SeriesColor::Slot(2),
-                series(|r| r.stats.load_average[2]),
-            ),
-        ],
-        chart::Scale::Number,
-    );
 
     let mut column = widget::Column::new()
         .push(period_picker(beszel))
-        .push(chart_row(fl!("beszel-cpu"), cpu, fl!("beszel-memory"), memory))
-        .push(chart_row(
-            fl!("beszel-disk"),
-            disk,
-            fl!("beszel-disk-io"),
-            disk_io,
-        ))
-        .push(chart_row(
-            fl!("beszel-bandwidth"),
-            bandwidth,
-            fl!("beszel-load"),
-            load,
-        ))
         .spacing(spacing.space_m);
 
-    if let Some(temperature) = temperature_chart(history) {
-        column = column.push(temperature);
+    // Panels sit two to a row, in the order `chart_panels` returns them.
+    let mut panels = chart_panels(history).into_iter();
+    while let Some(left) = panels.next() {
+        column = column.push(chart_row(left, panels.next()));
+    }
+
+    if let Some(temperature) = temperature_panel(history) {
+        column = column.push(
+            widget::Column::new()
+                .push(widgets::section_label(temperature.title))
+                .push(chart::view(
+                    temperature.chart.height(120.0),
+                    temperature.caption,
+                ))
+                .spacing(spacing.space_xxs)
+                .width(Length::Fill),
+        );
     }
 
     column.into()
 }
 
-/// Two charts side by side, each with its own title.
-fn chart_row<'a>(
-    left_title: String,
-    left: chart::Chart,
-    right_title: String,
-    right: chart::Chart,
-) -> Element<'a, Message> {
+/// One chart and the title above it.
+///
+/// Building these apart from drawing them is what makes the colour rules
+/// testable: which series wears the accent, which a fixed slot, and how many
+/// there are, can all be checked without a renderer.
+pub(crate) struct Panel {
+    pub title: String,
+    pub chart: chart::Chart,
+    pub caption: Option<String>,
+}
+
+impl Panel {
+    fn new(title: String, chart: chart::Chart) -> Self {
+        Self {
+            title,
+            chart,
+            caption: None,
+        }
+    }
+}
+
+/// The time-series panels, in display order.
+pub(crate) fn chart_panels(history: &[beszel_client::StatsRecord]) -> Vec<Panel> {
+    let series = |pick: fn(&beszel_client::StatsRecord) -> f64| -> Vec<f64> {
+        history.iter().map(pick).collect()
+    };
+
+    // A single series wears the desktop accent, filled, with no legend — the
+    // title already says what it is.
+    let single = |label: String, points: Vec<f64>| {
+        chart::Chart::new(
+            vec![chart::Series::new(label, chart::SeriesColor::Accent, points).filled()],
+            chart::Scale::Percent,
+        )
+    };
+
+    #[allow(clippy::cast_precision_loss)] // byte rates for display
+    let rate = |value: u64| value as f64;
+
+    vec![
+        Panel::new(
+            fl!("beszel-cpu"),
+            single(fl!("beszel-cpu"), series(|r| r.stats.cpu)),
+        ),
+        Panel::new(
+            fl!("beszel-memory"),
+            single(fl!("beszel-memory"), series(|r| r.stats.memory_pct)),
+        ),
+        Panel::new(
+            fl!("beszel-disk"),
+            single(fl!("beszel-disk"), series(|r| r.stats.disk_pct)),
+        ),
+        // Two series in the same unit, so one axis — never a second y-scale.
+        Panel::new(
+            fl!("beszel-disk-io"),
+            chart::Chart::new(
+                vec![
+                    chart::Series::new(
+                        fl!("beszel-read"),
+                        chart::SeriesColor::Slot(0),
+                        history.iter().map(|r| rate(r.stats.disk_io[0])).collect(),
+                    ),
+                    chart::Series::new(
+                        fl!("beszel-write"),
+                        chart::SeriesColor::Slot(1),
+                        history.iter().map(|r| rate(r.stats.disk_io[1])).collect(),
+                    ),
+                ],
+                chart::Scale::Rate,
+            ),
+        ),
+        Panel::new(
+            fl!("beszel-bandwidth"),
+            chart::Chart::new(
+                vec![
+                    chart::Series::new(
+                        fl!("beszel-sent"),
+                        chart::SeriesColor::Slot(0),
+                        history
+                            .iter()
+                            .map(|r| rate(r.stats.bandwidth_sent()))
+                            .collect(),
+                    ),
+                    chart::Series::new(
+                        fl!("beszel-received"),
+                        chart::SeriesColor::Slot(1),
+                        history
+                            .iter()
+                            .map(|r| rate(r.stats.bandwidth_received()))
+                            .collect(),
+                    ),
+                ],
+                chart::Scale::Rate,
+            ),
+        ),
+        Panel::new(
+            fl!("beszel-load"),
+            chart::Chart::new(
+                vec![
+                    chart::Series::new(
+                        fl!("beszel-load-1"),
+                        chart::SeriesColor::Slot(0),
+                        series(|r| r.stats.load_average[0]),
+                    ),
+                    chart::Series::new(
+                        fl!("beszel-load-5"),
+                        chart::SeriesColor::Slot(1),
+                        series(|r| r.stats.load_average[1]),
+                    ),
+                    chart::Series::new(
+                        fl!("beszel-load-15"),
+                        chart::SeriesColor::Slot(2),
+                        series(|r| r.stats.load_average[2]),
+                    ),
+                ],
+                chart::Scale::Number,
+            ),
+        ),
+    ]
+}
+
+/// Two panels side by side. A trailing odd panel takes the full width.
+fn chart_row<'a>(left: Panel, right: Option<Panel>) -> Element<'a, Message> {
     let spacing = theme::spacing();
 
-    let panel = |title: String, chart: chart::Chart| {
-        let body: Element<'a, Message> = if chart.is_empty() {
-            // A flat "no data" line beats an axis with nothing on it.
+    let panel = |panel: Panel| {
+        let body: Element<'a, Message> = if panel.chart.is_empty() {
+            // A "no data" note beats an axis with nothing on it.
             widget::text::caption(fl!("beszel-history-thin")).into()
         } else {
-            chart::view(chart, None)
+            chart::view(panel.chart, panel.caption)
         };
 
         widget::Column::new()
-            .push(widgets::section_label(title))
+            .push(widgets::section_label(panel.title))
             .push(body)
             .spacing(spacing.space_xxs)
             .width(Length::FillPortion(1))
     };
 
-    widget::Row::new()
-        .push(panel(left_title, left))
-        .push(panel(right_title, right))
+    let mut row = widget::Row::new()
+        .push(panel(left))
         .spacing(spacing.space_m)
-        .width(Length::Fill)
-        .into()
-}
+        .width(Length::Fill);
 
-/// Temperatures, as emphasis rather than eight colours.
-///
-/// This machine reports eight sensors. Eight categorical hues would be
-/// indistinguishable under colour-vision deficiency and would bury the only
-/// number that matters, so the hottest sensor is drawn in the accent and the
-/// rest recede into context.
-fn temperature_chart<'a>(
-    history: &[beszel_client::StatsRecord],
-) -> Option<Element<'a, Message>> {
-    let spacing = theme::spacing();
-
-    let latest = history.last()?;
-    if latest.stats.temperatures.is_empty() {
-        return None;
+    if let Some(right) = right {
+        row = row.push(panel(right));
     }
 
+    row.into()
+}
+
+/// Temperatures, as emphasis rather than one colour per sensor.
+///
+/// A machine can report eight or more sensors. That many categorical hues are
+/// indistinguishable under colour-vision deficiency and bury the only number
+/// that matters, so the hottest sensor wears the accent and the rest recede
+/// into context.
+pub(crate) fn temperature_panel(history: &[beszel_client::StatsRecord]) -> Option<Panel> {
+    let latest = history.last()?;
     let (hottest, peak) = latest.stats.peak_temperature()?;
     let hottest = hottest.to_string();
 
-    let mut series = Vec::new();
-
-    for name in latest.stats.temperatures.keys() {
-        let points: Vec<f64> = history
-            .iter()
-            .map(|record| {
-                record
-                    .stats
-                    .temperatures
-                    .get(name)
-                    .copied()
-                    .unwrap_or(0.0)
-            })
-            .collect();
-
-        let is_hottest = *name == hottest;
-        series.push(chart::Series::new(
-            name.clone(),
-            if is_hottest {
+    let mut series: Vec<chart::Series> = latest
+        .stats
+        .temperatures
+        .keys()
+        .map(|name| {
+            let color = if *name == hottest {
                 chart::SeriesColor::Accent
             } else {
                 chart::SeriesColor::Muted
-            },
-            points,
-        ));
-    }
+            };
+            chart::Series::new(name.clone(), color, sensor_history(history, name))
+        })
+        .collect();
 
     // Draw the emphasised line last so it sits above the context.
     series.sort_by_key(|s| s.color == chart::SeriesColor::Accent);
 
-    let caption = fl!(
-        "beszel-temp-caption",
-        sensor = hottest.as_str(),
-        celsius = format!("{peak:.0}"),
-        others = latest.stats.temperatures.len().saturating_sub(1)
-    );
+    Some(Panel {
+        title: fl!("beszel-temperature"),
+        chart: chart::Chart::new(series, chart::Scale::Celsius),
+        caption: Some(fl!(
+            "beszel-temp-caption",
+            sensor = hottest.as_str(),
+            celsius = format!("{peak:.0}"),
+            others = latest.stats.temperatures.len().saturating_sub(1)
+        )),
+    })
+}
 
-    Some(
-        widget::Column::new()
-            .push(widgets::section_label(fl!("beszel-temperature")))
-            .push(chart::view(
-                chart::Chart::new(series, chart::Scale::Celsius).height(120.0),
-                Some(caption),
-            ))
-            .spacing(spacing.space_xxs)
-            .width(Length::Fill)
-            .into(),
-    )
+/// One sensor's readings across the history, with gaps filled honestly.
+///
+/// A sensor can be absent from a sample — an agent restarted, a drive spun
+/// down. Filling that gap with zero draws a plunge to 0 °C that never
+/// happened. Instead a gap holds the last known reading, and a gap at the
+/// start takes the first one that exists.
+pub(crate) fn sensor_history(history: &[beszel_client::StatsRecord], sensor: &str) -> Vec<f64> {
+    let readings: Vec<Option<f64>> = history
+        .iter()
+        .map(|record| record.stats.temperatures.get(sensor).copied())
+        .collect();
+
+    let first_known = readings
+        .iter()
+        .flatten()
+        .next()
+        .copied()
+        .unwrap_or_default();
+
+    let mut last = first_known;
+    readings
+        .into_iter()
+        .map(|reading| {
+            if let Some(value) = reading {
+                last = value;
+            }
+            last
+        })
+        .collect()
 }
 
 /// The one time-range control, above every chart it scopes.
@@ -681,11 +707,7 @@ fn sensors(stats: &Stats) -> Element<'_, Message> {
 
     widget::Column::new()
         .push(widgets::section_label(fl!("beszel-sensors")))
-        .push(
-            widget::scrollable(row)
-                .horizontal()
-                .width(Length::Fill),
-        )
+        .push(widget::scrollable(row).horizontal().width(Length::Fill))
         .spacing(spacing.space_xxs)
         .into()
 }
@@ -707,7 +729,10 @@ fn containers(containers: &[ContainerStats]) -> Element<'_, Message> {
         let mut row = widget::Row::new()
             .push(widget::text::body(container.name.clone()).width(Length::Fill))
             .push(widget::text::caption(format!("{:.1}%", container.cpu)))
-            .push(widget::text::caption(format!("{:.0} MiB", container.memory)))
+            .push(widget::text::caption(format!(
+                "{:.0} MiB",
+                container.memory
+            )))
             .spacing(spacing.space_s)
             .align_y(Alignment::Center);
 
@@ -782,9 +807,7 @@ fn unmonitored_card(state: &State) -> Element<'_, Message> {
 /// This installs software as root over SSH. The exact command is shown, on the
 /// named host, and nothing happens until the user agrees to that specific one —
 /// there is deliberately no way to approve a batch.
-fn install_confirmation(
-    pending: &crate::app::beszel::PendingInstall,
-) -> Element<'_, Message> {
+fn install_confirmation(pending: &crate::app::beszel::PendingInstall) -> Element<'_, Message> {
     let spacing = theme::spacing();
 
     widget::Column::new()
@@ -825,4 +848,215 @@ fn install_confirmation(
         .width(Length::Fill)
         .class(theme::Container::Card)
         .into()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::ui::chart::{Scale, SeriesColor};
+    use beszel_client::StatsRecord;
+
+    fn record(json: &str) -> StatsRecord {
+        serde_json::from_str(&format!(
+            r#"{{"id":"r","system":"s","type":"1m","created":"x","stats":{json}}}"#
+        ))
+        .expect("stats record decodes")
+    }
+
+    fn history() -> Vec<StatsRecord> {
+        (0..5)
+            .map(|i| {
+                record(&format!(
+                    r#"{{"cpu":{i}.0,"mp":10.0,"dp":60.0,"dio":[{r},{w}],"b":[1,2],
+                        "la":[1.0,2.0,3.0],"t":{{"core_0":50.0,"nvme":{hot}}}}}"#,
+                    r = i * 100,
+                    w = i * 200,
+                    hot = 60 + i
+                ))
+            })
+            .collect()
+    }
+
+    fn panel<'a>(panels: &'a [Panel], title: &str) -> &'a Panel {
+        panels
+            .iter()
+            .find(|p| p.title == title)
+            .unwrap_or_else(|| panic!("no {title} panel"))
+    }
+
+    #[test]
+    fn every_panel_is_present_in_order() {
+        let titles: Vec<String> = chart_panels(&history())
+            .into_iter()
+            .map(|p| p.title)
+            .collect();
+        assert_eq!(
+            titles,
+            [
+                fl!("beszel-cpu"),
+                fl!("beszel-memory"),
+                fl!("beszel-disk"),
+                fl!("beszel-disk-io"),
+                fl!("beszel-bandwidth"),
+                fl!("beszel-load"),
+            ]
+        );
+    }
+
+    /// Single-series charts use the desktop accent, filled.
+    #[test]
+    fn single_series_charts_wear_the_accent() {
+        let panels = chart_panels(&history());
+
+        for title in [fl!("beszel-cpu"), fl!("beszel-memory"), fl!("beszel-disk")] {
+            let chart = &panel(&panels, &title).chart;
+            assert_eq!(chart.series().len(), 1, "{title}");
+            assert_eq!(chart.series()[0].color, SeriesColor::Accent, "{title}");
+            assert!(chart.series()[0].filled, "{title} should be filled");
+            assert_eq!(chart.scale(), Scale::Percent, "{title}");
+        }
+    }
+
+    /// The accent never appears beside a sibling series. A user's accent is
+    /// arbitrary and can fail the checks that keep series distinguishable, so
+    /// multi-series charts use the fixed, validated slots — in order, never
+    /// cycled.
+    #[test]
+    fn multi_series_charts_never_use_the_accent() {
+        for panel in chart_panels(&history()) {
+            let series = panel.chart.series();
+            if series.len() < 2 {
+                continue;
+            }
+
+            for (index, s) in series.iter().enumerate() {
+                assert_eq!(
+                    s.color,
+                    SeriesColor::Slot(index),
+                    "{} series {index} should use slot {index}",
+                    panel.title
+                );
+                assert!(
+                    !s.filled,
+                    "{}: overlapping fills would hide each other",
+                    panel.title
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn multi_series_charts_have_the_right_series_and_units() {
+        let panels = chart_panels(&history());
+
+        assert_eq!(
+            panel(&panels, &fl!("beszel-disk-io")).chart.series().len(),
+            2
+        );
+        assert_eq!(
+            panel(&panels, &fl!("beszel-disk-io")).chart.scale(),
+            Scale::Rate
+        );
+        assert_eq!(
+            panel(&panels, &fl!("beszel-bandwidth"))
+                .chart
+                .series()
+                .len(),
+            2
+        );
+        assert_eq!(panel(&panels, &fl!("beszel-load")).chart.series().len(), 3);
+        assert_eq!(
+            panel(&panels, &fl!("beszel-load")).chart.scale(),
+            Scale::Number
+        );
+    }
+
+    /// Charts read left to right, oldest first, one point per sample.
+    #[test]
+    fn series_follow_the_history_in_order() {
+        let history = history();
+        let panels = chart_panels(&history);
+
+        let cpu = &panel(&panels, &fl!("beszel-cpu")).chart.series()[0].points;
+        assert_eq!(cpu, &[0.0, 1.0, 2.0, 3.0, 4.0]);
+
+        let write = &panel(&panels, &fl!("beszel-disk-io")).chart.series()[1].points;
+        assert_eq!(write, &[0.0, 200.0, 400.0, 600.0, 800.0]);
+
+        for panel in &panels {
+            for s in panel.chart.series() {
+                assert_eq!(
+                    s.points.len(),
+                    history.len(),
+                    "{}: {}",
+                    panel.title,
+                    s.label
+                );
+            }
+        }
+    }
+
+    /// Emphasis: exactly one sensor in the accent — the hottest — and the rest
+    /// as muted context, drawn underneath it.
+    #[test]
+    fn temperature_emphasises_only_the_hottest_sensor() {
+        let panel = temperature_panel(&history()).expect("sensors present");
+        let series = panel.chart.series();
+
+        assert_eq!(series.len(), 2);
+        let accented: Vec<&str> = series
+            .iter()
+            .filter(|s| s.color == SeriesColor::Accent)
+            .map(|s| s.label.as_str())
+            .collect();
+        assert_eq!(accented, ["nvme"], "the hottest sensor is emphasised");
+        assert!(
+            series
+                .iter()
+                .filter(|s| s.color != SeriesColor::Accent)
+                .all(|s| s.color == SeriesColor::Muted)
+        );
+
+        // Last in the list means drawn last, on top of the context lines.
+        assert_eq!(series.last().map(|s| s.color), Some(SeriesColor::Accent));
+        assert_eq!(panel.chart.scale(), Scale::Celsius);
+        assert!(panel.caption.expect("caption").contains("nvme"));
+    }
+
+    #[test]
+    fn eight_sensors_still_get_one_accent() {
+        let history = vec![
+            record(r#"{"t":{"a":40,"b":41,"c":42,"d":43,"e":44,"f":45,"g":70,"h":46}}"#),
+            record(r#"{"t":{"a":40,"b":41,"c":42,"d":43,"e":44,"f":45,"g":71,"h":46}}"#),
+        ];
+        let panel = temperature_panel(&history).expect("sensors present");
+        let accents = panel
+            .chart
+            .series()
+            .iter()
+            .filter(|s| s.color == SeriesColor::Accent)
+            .count();
+
+        assert_eq!(panel.chart.series().len(), 8);
+        assert_eq!(accents, 1, "never one hue per sensor");
+    }
+
+    #[test]
+    fn no_sensors_means_no_temperature_panel() {
+        assert!(temperature_panel(&[record(r#"{"cpu":1.0}"#)]).is_none());
+        assert!(temperature_panel(&[]).is_none());
+    }
+
+    /// A sensor missing from a sample must not be drawn as a plunge to 0 °C.
+    #[test]
+    fn missing_sensor_readings_hold_the_last_known_value() {
+        let history = vec![
+            record(r#"{"t":{"other":1}}"#), // leading gap
+            record(r#"{"t":{"nvme":35.0}}"#),
+            record(r#"{"t":{"other":1}}"#), // gap in the middle
+            record(r#"{"t":{"nvme":38.0}}"#),
+        ];
+
+        assert_eq!(sensor_history(&history, "nvme"), [35.0, 35.0, 35.0, 38.0]);
+    }
 }

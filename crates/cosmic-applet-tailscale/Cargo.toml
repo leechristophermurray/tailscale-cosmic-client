@@ -23,3 +23,6 @@ rust-embed.workspace = true
 [[bin]]
 name = "cosmic-applet-tailscale"
 path = "src/main.rs"
+
+[dev-dependencies]
+serde_json.workspace = true

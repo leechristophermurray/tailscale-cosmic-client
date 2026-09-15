@@ -153,6 +153,16 @@ impl Chart {
         self
     }
 
+    #[cfg(test)]
+    pub fn series(&self) -> &[Series] {
+        &self.series
+    }
+
+    #[cfg(test)]
+    pub fn scale(&self) -> Scale {
+        self.scale
+    }
+
     /// True when there is nothing worth drawing.
     #[must_use]
     pub fn is_empty(&self) -> bool {
@@ -166,7 +176,7 @@ impl Chart {
     /// machine sitting at 18% drawn against a fixed 0-100 axis is a flat line
     /// in six pixels, which says less than no chart at all. Both bounds are
     /// labelled, so the range a reader is looking at is never implicit.
-    fn ceiling(&self) -> f64 {
+    pub(crate) fn ceiling(&self) -> f64 {
         let peak = self
             .series
             .iter()
@@ -427,5 +437,107 @@ impl<Message> canvas::Program<Message, Theme, Renderer> for Chart {
         }
 
         vec![frame.into_geometry()]
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn chart(scale: Scale, points: &[f64]) -> Chart {
+        Chart::new(
+            vec![Series::new("x", SeriesColor::Accent, points.to_vec())],
+            scale,
+        )
+    }
+
+    /// The bug that shipped a flat line: a machine at 18% CPU drawn on a fixed
+    /// 0-100 axis filled six pixels of a 96-pixel chart. The axis must scale
+    /// so a quiet machine's shape is actually visible.
+    #[test]
+    fn a_quiet_machine_fills_a_meaningful_share_of_the_chart() {
+        let quiet = chart(Scale::Percent, &[16.0, 22.0, 18.0]);
+        let share = 22.0 / quiet.ceiling();
+
+        assert!(
+            share >= 0.5,
+            "a 22% peak uses only {:.0}% of the chart height",
+            share * 100.0
+        );
+    }
+
+    #[test]
+    fn percent_axes_leave_headroom_and_stay_within_bounds() {
+        // Headroom above the peak, so the line is not pinned to the top.
+        assert!((chart(Scale::Percent, &[40.0, 60.0]).ceiling() - 75.0).abs() < f64::EPSILON);
+        // A floor, so near-idle is not drawn as dramatic.
+        assert!((chart(Scale::Percent, &[1.0, 2.0]).ceiling() - 25.0).abs() < f64::EPSILON);
+        // Never past 100%.
+        assert!((chart(Scale::Percent, &[95.0, 99.0]).ceiling() - 100.0).abs() < f64::EPSILON);
+        assert!((chart(Scale::Percent, &[0.0, 0.0]).ceiling() - 25.0).abs() < f64::EPSILON);
+    }
+
+    /// Silicon idles in the fifties; half a 0-100 axis would be wasted.
+    #[test]
+    fn temperature_axes_scale_to_the_hottest_reading() {
+        assert!((chart(Scale::Celsius, &[55.0, 62.0]).ceiling() - 78.0).abs() < f64::EPSILON);
+        assert!((chart(Scale::Celsius, &[18.0, 20.0]).ceiling() - 40.0).abs() < f64::EPSILON);
+    }
+
+    /// Rates and counts round up to 1, 2 or 5 times a power of ten, so the
+    /// axis reads "2 MB/s" rather than "1.93 MB/s".
+    #[test]
+    fn unbounded_axes_round_to_readable_steps() {
+        let cases = [
+            (1_930_000.0, 2_000_000.0),
+            (3_100.0, 5_000.0),
+            (7_000.0, 10_000.0),
+            (1.0, 1.0),
+            (1.68, 2.0),
+            (0.3, 0.5),
+        ];
+        for (peak, expected) in cases {
+            let ceiling = chart(Scale::Rate, &[0.0, peak]).ceiling();
+            assert!(
+                (ceiling - expected).abs() < expected * 1e-9,
+                "peak {peak} gave ceiling {ceiling}, expected {expected}"
+            );
+        }
+        assert!((chart(Scale::Number, &[0.0, 0.0]).ceiling() - 1.0).abs() < f64::EPSILON);
+    }
+
+    /// The baseline is never truncated: every value maps at or above zero.
+    #[test]
+    fn the_ceiling_is_never_below_the_peak() {
+        for scale in [Scale::Percent, Scale::Rate, Scale::Number, Scale::Celsius] {
+            for peak in [0.1, 1.0, 9.9, 18.0, 64.0, 99.0, 250.0, 1e6] {
+                let c = chart(scale, &[0.0, peak]);
+                let ceiling = c.ceiling();
+                let capped = if scale == Scale::Percent {
+                    peak.min(100.0)
+                } else {
+                    peak
+                };
+                assert!(
+                    ceiling >= capped,
+                    "{scale:?}: ceiling {ceiling} below peak {peak}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn a_chart_needs_two_points_to_draw_a_line() {
+        assert!(chart(Scale::Percent, &[]).is_empty());
+        assert!(chart(Scale::Percent, &[5.0]).is_empty());
+        assert!(!chart(Scale::Percent, &[5.0, 6.0]).is_empty());
+    }
+
+    #[test]
+    fn axis_labels_format_for_their_scale() {
+        assert_eq!(Scale::Percent.format(25.0), "25%");
+        assert_eq!(Scale::Celsius.format(78.0), "78°");
+        assert_eq!(Scale::Number.format(1.5), "1.5");
+        assert_eq!(Scale::Number.format(40.0), "40");
     }
 }
