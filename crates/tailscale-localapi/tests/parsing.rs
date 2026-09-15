@@ -149,7 +149,8 @@ fn masked_prefs_only_serialise_what_was_set() {
 /// serialised rather than skipped as "unset".
 #[test]
 fn clearing_the_exit_node_is_an_explicit_write() {
-    let json = serde_json::to_value(tailscale_localapi::MaskedPrefs::new().exit_node_id("")).unwrap();
+    let json =
+        serde_json::to_value(tailscale_localapi::MaskedPrefs::new().exit_node_id("")).unwrap();
 
     assert_eq!(json["ExitNodeID"], serde_json::json!(""));
     assert_eq!(json["ExitNodeIDSet"], serde_json::json!(true));

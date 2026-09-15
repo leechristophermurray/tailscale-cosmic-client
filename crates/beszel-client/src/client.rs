@@ -109,15 +109,15 @@ impl BeszelHub {
     pub async fn health(&self) -> Result<()> {
         let url = format!("{}/api/health", self.base);
 
-        let response =
-            self.http
-                .get(&url)
-                .send()
-                .await
-                .map_err(|source| Error::Unreachable {
-                    url: url.clone(),
-                    source,
-                })?;
+        let response = self
+            .http
+            .get(&url)
+            .send()
+            .await
+            .map_err(|source| Error::Unreachable {
+                url: url.clone(),
+                source,
+            })?;
 
         if response.status().is_success() {
             Ok(())
@@ -210,9 +210,7 @@ impl BeszelHub {
 
     /// The most recent stats sample for one machine.
     pub async fn latest_stats(&self, system_id: &str) -> Result<Option<Stats>> {
-        let records = self
-            .stats(system_id, StatsPeriod::OneMinute, 1)
-            .await?;
+        let records = self.stats(system_id, StatsPeriod::OneMinute, 1).await?;
         Ok(records.into_iter().next().map(|record| record.stats))
     }
 
@@ -259,7 +257,11 @@ impl BeszelHub {
             .map(|record| record.stats)
             .unwrap_or_default();
 
-        containers.sort_by(|a, b| b.cpu.partial_cmp(&a.cpu).unwrap_or(std::cmp::Ordering::Equal));
+        containers.sort_by(|a, b| {
+            b.cpu
+                .partial_cmp(&a.cpu)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
         Ok(containers)
     }
 }

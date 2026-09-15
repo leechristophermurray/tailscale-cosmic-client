@@ -180,7 +180,10 @@ impl LocalApi {
     /// so a failed write does not lose the transfer.
     pub async fn fetch_file(&self, name: &str) -> Result<Vec<u8>> {
         let path = format!("/localapi/v0/files/{}", urlencode(name));
-        let bytes = self.transport.request_bytes(Method::GET, &path, None).await?;
+        let bytes = self
+            .transport
+            .request_bytes(Method::GET, &path, None)
+            .await?;
         Ok(bytes.to_vec())
     }
 

@@ -120,9 +120,9 @@ fn target_row<'a>(state: &'a State, peer: &'a PeerStatus) -> Element<'a, Message
         .padding(spacing.space_xs)
         .width(Length::Fill)
         .selected(selected)
-        .class(theme::Button::ListItem([
-            theme::active().cosmic().corner_radii.radius_s[0]; 4
-        ]))
+        .class(theme::Button::ListItem(
+            [theme::active().cosmic().corner_radii.radius_s[0]; 4],
+        ))
         .on_press(Message::TaildropSelectTarget(peer.id.clone()))
         .into()
 }
@@ -198,8 +198,10 @@ fn queued(state: &State) -> Element<'_, Message> {
         .pending_drop
         .iter()
         .map(|path| {
-            path.file_name()
-                .map_or_else(|| path.display().to_string(), |n| n.to_string_lossy().into_owned())
+            path.file_name().map_or_else(
+                || path.display().to_string(),
+                |n| n.to_string_lossy().into_owned(),
+            )
         })
         .collect();
 
@@ -229,10 +231,7 @@ fn queued(state: &State) -> Element<'_, Message> {
                     })
                     .on_press_maybe(send),
                 )
-                .push(
-                    widget::button::standard(fl!("cancel"))
-                        .on_press(Message::ClearPendingDrop),
-                )
+                .push(widget::button::standard(fl!("cancel")).on_press(Message::ClearPendingDrop))
                 .spacing(spacing.space_xs),
         )
         .apply(widget::container)

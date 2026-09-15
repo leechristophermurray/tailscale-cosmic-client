@@ -49,8 +49,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .min_height(560.0),
         );
 
-    cosmic::app::run::<app::App>(settings, app::Flags {
-        pending_files: files_from_args(),
-    })?;
+    cosmic::app::run::<app::App>(
+        settings,
+        app::Flags {
+            pending_files: files_from_args(),
+        },
+    )?;
     Ok(())
 }

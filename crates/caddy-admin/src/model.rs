@@ -69,10 +69,7 @@ impl Route {
     /// Where this route sends traffic, flattened for display.
     #[must_use]
     pub fn upstreams(&self) -> Vec<String> {
-        self.handle
-            .iter()
-            .flat_map(Handler::upstreams)
-            .collect()
+        self.handle.iter().flat_map(Handler::upstreams).collect()
     }
 
     /// A one-line description of what this route does.
@@ -189,7 +186,6 @@ impl Route {
         }
     }
 }
-
 
 impl Route {
     /// Every addressable site under this route.

@@ -6,6 +6,7 @@ members = [
     "crates/cosmic-applet-tailscale",
     "crates/caddy-admin",
     "crates/beszel-client",
+    "crates/http-stub",
 ]
 
 [workspace.package]
@@ -18,6 +19,7 @@ rust-version = "1.93"
 tailscale-localapi = { path = "crates/tailscale-localapi" }
 caddy-admin = { path = "crates/caddy-admin" }
 beszel-client = { path = "crates/beszel-client" }
+http-stub = { path = "crates/http-stub" }
 
 libcosmic = { git = "https://github.com/pop-os/libcosmic", rev = "7e82198ab1aba712640b0167e58ad37bf03012ca", default-features = false }
 

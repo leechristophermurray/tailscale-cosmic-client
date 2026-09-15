@@ -549,6 +549,7 @@ name = "beszel-client"
 version = "0.1.0"
 dependencies = [
  "chrono",
+ "http-stub",
  "reqwest",
  "serde",
  "serde_json",
@@ -752,6 +753,7 @@ name = "caddy-admin"
 version = "0.1.0"
 dependencies = [
  "http-body-util",
+ "http-stub",
  "hyper",
  "hyper-util",
  "serde",
@@ -1073,6 +1075,7 @@ dependencies = [
  "libcosmic",
  "open",
  "rust-embed",
+ "serde_json",
  "tailscale-localapi",
  "tokio",
  "tracing",
@@ -2459,6 +2462,13 @@ dependencies = [
  "http",
  "http-body",
  "pin-project-lite",
+]
+
+[[package]]
+name = "http-stub"
+version = "0.1.0"
+dependencies = [
+ "tokio",
 ]
 
 [[package]]
@@ -5867,6 +5877,7 @@ dependencies = [
  "chrono",
  "futures-util",
  "http-body-util",
+ "http-stub",
  "hyper",
  "hyper-util",
  "serde",

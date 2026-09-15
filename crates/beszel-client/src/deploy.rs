@@ -71,7 +71,18 @@ impl AgentInstall {
     /// Returns the script's combined output either way: on success it says what
     /// was installed, and on failure it is the only explanation of why.
     pub async fn run(&self) -> InstallOutcome {
-        let mut command = Command::new("ssh");
+        self.run_with(std::ffi::OsStr::new("ssh"), INSTALL_TIMEOUT)
+            .await
+    }
+
+    /// `run`, with the ssh program and time limit supplied, so tests can use a
+    /// stand-in instead of a real machine and a short limit instead of minutes.
+    async fn run_with(
+        &self,
+        program: &std::ffi::OsStr,
+        timeout: std::time::Duration,
+    ) -> InstallOutcome {
+        let mut command = Command::new(program);
         command
             .args(["-o", "BatchMode=yes"])
             // The tailnet already authenticated the node; refusing on a
@@ -82,7 +93,11 @@ impl AgentInstall {
             .arg(self.remote_command())
             .stdin(Stdio::null())
             .stdout(Stdio::piped())
-            .stderr(Stdio::piped());
+            .stderr(Stdio::piped())
+            // When the install is abandoned — timed out, or the task dropped —
+            // stop it. Otherwise the UI reports failure while a root installer
+            // carries on remotely, and a retry starts a second one alongside.
+            .kill_on_drop(true);
 
         let child = match command.spawn() {
             Ok(child) => child,
@@ -91,12 +106,12 @@ impl AgentInstall {
             }
         };
 
-        match tokio::time::timeout(INSTALL_TIMEOUT, wait_with_output(child)).await {
+        match tokio::time::timeout(timeout, wait_with_output(child)).await {
             Ok(outcome) => outcome,
             Err(_) => InstallOutcome::failed(format!(
                 "the installation on {} did not finish within {} seconds",
                 self.host,
-                INSTALL_TIMEOUT.as_secs()
+                timeout.as_secs()
             )),
         }
     }
@@ -205,6 +220,187 @@ mod tests {
         let summary = AgentInstall::new("nas.ts.net", "k").summary();
         assert!(summary.contains("nas.ts.net"));
         assert!(summary.contains("45876"));
+    }
+
+    /// Writing an executable and running it is racy under parallel tests: if
+    /// another test forks while this file is still open for writing, the child
+    /// inherits that descriptor and the kernel refuses to execute the file
+    /// (`ETXTBSY`, "Text file busy") until the child execs. Every write of a
+    /// fake and every spawn happens under this lock, so the two never overlap.
+    static SPAWN_LOCK: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
+
+    /// A stand-in `ssh` that records its arguments and pid, then runs `body`.
+    /// Its directory is removed when this is dropped.
+    struct FakeSsh {
+        dir: std::path::PathBuf,
+    }
+
+    impl FakeSsh {
+        fn new(name: &str, body: &str) -> Self {
+            use std::os::unix::fs::PermissionsExt;
+
+            let dir = std::env::temp_dir().join(format!(
+                "fake-deploy-ssh-{name}-{}-{}",
+                std::process::id(),
+                std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .map_or(0, |d| d.as_nanos())
+            ));
+            std::fs::create_dir_all(&dir).unwrap();
+            let program = dir.join("ssh");
+            std::fs::write(
+                &program,
+                format!(
+                    "#!/bin/sh\nprintf '%s\\n' \"$@\" > '{}'\necho $$ > '{}'\n{body}\n",
+                    dir.join("args").display(),
+                    dir.join("pid").display()
+                ),
+            )
+            .unwrap();
+            std::fs::set_permissions(&program, std::fs::Permissions::from_mode(0o755)).unwrap();
+            Self { dir }
+        }
+
+        fn program(&self) -> std::path::PathBuf {
+            self.dir.join("ssh")
+        }
+
+        fn args(&self) -> String {
+            std::fs::read_to_string(self.dir.join("args")).unwrap_or_default()
+        }
+
+        fn pid(&self) -> Option<u32> {
+            std::fs::read_to_string(self.dir.join("pid"))
+                .ok()?
+                .trim()
+                .parse()
+                .ok()
+        }
+    }
+
+    impl Drop for FakeSsh {
+        fn drop(&mut self) {
+            let _ = std::fs::remove_dir_all(&self.dir);
+        }
+    }
+
+    fn alive(pid: u32) -> bool {
+        let status = std::fs::read_to_string(format!("/proc/{pid}/status")).unwrap_or_default();
+        !status.is_empty() && !status.contains("State:\tZ")
+    }
+
+    /// The remote command travels as ssh's last argument, after the host, so
+    /// the machine that runs it is the one the user approved.
+    #[tokio::test]
+    async fn the_approved_command_runs_on_the_approved_host() {
+        let install = AgentInstall::new("nas.example.ts.net", "ssh-ed25519 AAAA");
+        let _guard = SPAWN_LOCK.lock().await;
+        let fake = FakeSsh::new("host", "echo installed; exit 0");
+        let program = fake.program();
+
+        let outcome = install
+            .run_with(program.as_os_str(), std::time::Duration::from_secs(5))
+            .await;
+        assert!(outcome.succeeded, "{}", outcome.output);
+
+        let args = fake.args();
+        let args: Vec<&str> = args.lines().collect();
+        let host = args
+            .iter()
+            .position(|a| *a == "nas.example.ts.net")
+            .expect("host passed");
+        assert_eq!(
+            args[host + 1],
+            install.remote_command(),
+            "the exact command shown to the user"
+        );
+        assert!(
+            args.windows(2).any(|w| w == ["-o", "BatchMode=yes"]),
+            "never prompts"
+        );
+    }
+
+    #[tokio::test]
+    async fn a_failing_install_keeps_stderr_and_the_exit_status() {
+        let install = AgentInstall::new("host", "k");
+        let _guard = SPAWN_LOCK.lock().await;
+        let fake = FakeSsh::new(
+            "fail",
+            "echo downloading; echo 'sudo: a password is required' >&2; exit 1",
+        );
+        let program = fake.program();
+
+        let outcome = install
+            .run_with(program.as_os_str(), std::time::Duration::from_secs(5))
+            .await;
+
+        assert!(!outcome.succeeded);
+        assert!(outcome.output.contains("downloading"), "stdout kept");
+        assert!(
+            outcome.output.contains("sudo: a password is required"),
+            "stderr kept"
+        );
+        assert!(
+            outcome.output.contains("exited with"),
+            "the status is reported"
+        );
+    }
+
+    #[tokio::test]
+    async fn a_hung_install_is_abandoned_with_a_reason() {
+        let install = AgentInstall::new("slow.ts.net", "k");
+        let _guard = SPAWN_LOCK.lock().await;
+        let fake = FakeSsh::new("hang", "exec sleep 30");
+
+        let outcome = install
+            .run_with(
+                fake.program().as_os_str(),
+                std::time::Duration::from_millis(300),
+            )
+            .await;
+
+        assert!(!outcome.succeeded);
+        assert!(
+            outcome.output.contains("did not finish"),
+            "{}",
+            outcome.output
+        );
+        assert!(outcome.output.contains("slow.ts.net"));
+
+        // Reporting a timeout while the install carries on would leave a root
+        // installer running behind the user's back — and a retry would start a
+        // second one on the same machine.
+        let pid = fake.pid().expect("the fake ssh started");
+        let mut stopped = false;
+        for _ in 0..50 {
+            if !alive(pid) {
+                stopped = true;
+                break;
+            }
+            tokio::time::sleep(std::time::Duration::from_millis(20)).await;
+        }
+        assert!(
+            stopped,
+            "ssh {pid} kept running after the install was abandoned"
+        );
+    }
+
+    #[tokio::test]
+    async fn a_missing_ssh_is_reported_not_panicked() {
+        let _guard = SPAWN_LOCK.lock().await;
+        let outcome = AgentInstall::new("host", "k")
+            .run_with(
+                std::ffi::OsStr::new("/nonexistent/ssh"),
+                std::time::Duration::from_secs(1),
+            )
+            .await;
+
+        assert!(!outcome.succeeded);
+        assert!(
+            outcome.output.contains("could not start ssh"),
+            "{}",
+            outcome.output
+        );
     }
 
     #[test]

@@ -6,8 +6,8 @@ use cosmic::{Apply, Element, theme, widget};
 use tailscale_localapi::PeerStatus;
 
 use crate::app::message::Message;
-use crate::fl;
 use crate::app::state::State;
+use crate::fl;
 use crate::ui::{Tone, format, icons, widgets};
 
 pub fn view(state: &State) -> Element<'_, Message> {
@@ -147,9 +147,9 @@ fn direct_mesh_row(state: &State) -> Element<'_, Message> {
         .padding(spacing.space_xs)
         .width(Length::Fill)
         .selected(selected)
-        .class(theme::Button::ListItem([
-            theme::active().cosmic().corner_radii.radius_s[0]; 4
-        ]))
+        .class(theme::Button::ListItem(
+            [theme::active().cosmic().corner_radii.radius_s[0]; 4],
+        ))
         .on_press(Message::ExitNodeSelected(0))
         .into()
 }
@@ -201,9 +201,9 @@ fn exit_node_row<'a>(state: &'a State, peer: &'a PeerStatus) -> Element<'a, Mess
         .padding(spacing.space_xs)
         .width(Length::Fill)
         .selected(selected)
-        .class(theme::Button::ListItem([
-            theme::active().cosmic().corner_radii.radius_s[0]; 4
-        ]))
+        .class(theme::Button::ListItem(
+            [theme::active().cosmic().corner_radii.radius_s[0]; 4],
+        ))
         // Selecting an offline node would just fail, so the row stays inert.
         .on_press_maybe(peer.online.then_some(Message::ExitNodeSelected(index)))
         .into()
@@ -249,9 +249,7 @@ fn advertise_card(state: &State) -> Element<'_, Message> {
     // Advertising is only half the story: a tailnet admin has to approve the
     // route before any peer can actually use it.
     if advertising {
-        let approved = state
-            .self_peer()
-            .is_some_and(|peer| peer.exit_node_option);
+        let approved = state.self_peer().is_some_and(|peer| peer.exit_node_option);
 
         column = column.push(if approved {
             widgets::status_label(fl!("advertise-approved"), Tone::Positive)

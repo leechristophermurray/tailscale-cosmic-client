@@ -5,8 +5,8 @@ use cosmic::iced::Length;
 use cosmic::{Apply, Element, theme, widget};
 
 use crate::app::message::Message;
-use crate::fl;
 use crate::app::state::State;
+use crate::fl;
 use crate::ui::{Tone, icons, widgets};
 
 use super::access::switch_row;
@@ -57,7 +57,10 @@ fn routing_card(state: &State) -> Element<'_, Message> {
 fn account_card(state: &State) -> Element<'_, Message> {
     let spacing = theme::spacing();
 
-    let profile = state.prefs.as_deref().and_then(tailscale_localapi::Prefs::user_profile);
+    let profile = state
+        .prefs
+        .as_deref()
+        .and_then(tailscale_localapi::Prefs::user_profile);
 
     let mut column = widget::Column::new()
         .push(widgets::section_header(icons::ACCOUNT, fl!("account")))
@@ -126,7 +129,10 @@ fn connection_card(state: &State) -> Element<'_, Message> {
     let mut column = widget::Column::new()
         .push(widgets::section_header(icons::TAILNET, fl!("daemon")))
         .push(widgets::status_label(summary, tone))
-        .push(widget::text::monotext(format!("unix://{}", tailscale_localapi::DEFAULT_SOCKET)).size(12.0))
+        .push(
+            widget::text::monotext(format!("unix://{}", tailscale_localapi::DEFAULT_SOCKET))
+                .size(12.0),
+        )
         .spacing(spacing.space_xs);
 
     if state.throughput.has_rate() {

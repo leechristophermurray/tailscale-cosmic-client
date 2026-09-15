@@ -110,7 +110,10 @@ mod tests {
     #[test]
     fn ignores_non_file_uris() {
         let payload = "https://example.com/page\r\nfile:///tmp/real.txt\r\n";
-        assert_eq!(parse(payload.as_bytes()), vec![PathBuf::from("/tmp/real.txt")]);
+        assert_eq!(
+            parse(payload.as_bytes()),
+            vec![PathBuf::from("/tmp/real.txt")]
+        );
     }
 
     /// A `file://host/path` URI points at another machine's filesystem.
@@ -122,7 +125,10 @@ mod tests {
     /// Some senders drop a bare path instead of a URI.
     #[test]
     fn accepts_a_bare_path() {
-        assert_eq!(parse(b"/tmp/plain.txt\n"), vec![PathBuf::from("/tmp/plain.txt")]);
+        assert_eq!(
+            parse(b"/tmp/plain.txt\n"),
+            vec![PathBuf::from("/tmp/plain.txt")]
+        );
     }
 
     #[test]

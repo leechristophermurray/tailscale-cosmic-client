@@ -164,9 +164,7 @@ fn peer_section(applet: &Applet) -> Element<'_, Message> {
         .spacing(spacing.space_xxs);
 
     if peers.is_empty() {
-        return column
-            .push(widget::text::caption(fl!("peers-none")))
-            .into();
+        return column.push(widget::text::caption(fl!("peers-none"))).into();
     }
 
     for peer in peers {

@@ -178,8 +178,7 @@ fn flags_zfs_pools_that_are_not_online() {
 /// treating it as a fault would cry wolf on every pool.
 #[test]
 fn a_pool_with_no_reported_health_is_not_called_degraded() {
-    let stats: Stats =
-        serde_json::from_str(r#"{"z": {"old": {"d": 100.0, "du": 50.0}}}"#).unwrap();
+    let stats: Stats = serde_json::from_str(r#"{"z": {"old": {"d": 100.0, "du": 50.0}}}"#).unwrap();
     assert!(stats.degraded_pools().is_empty());
 }
 

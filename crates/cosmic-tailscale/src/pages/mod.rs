@@ -13,8 +13,8 @@ pub mod taildrop;
 use cosmic::Element;
 
 use crate::app::message::Message;
-use crate::fl;
 use crate::app::state::State;
+use crate::fl;
 use crate::ui::icons;
 
 /// A sidebar destination.
@@ -167,9 +167,8 @@ mod tests {
     fn the_caddy_page_renders_when_connected() {
         let mut state = populated_state();
 
-        state.caddy.connection = crate::app::caddy::Connection::Tunnelled(
-            caddy_admin::Endpoint::tunnelled(12019),
-        );
+        state.caddy.connection =
+            crate::app::caddy::Connection::Tunnelled(caddy_admin::Endpoint::tunnelled(12019));
         state.caddy.sites = vec![
             caddy_admin::Site {
                 host: "git.example.com".to_string(),
@@ -255,9 +254,7 @@ mod tests {
         );
         state.beszel.containers.insert(
             "s1".to_string(),
-            vec![
-                serde_json::from_str(r#"{"n":"grafana","c":2.1,"m":128.0,"u":true}"#).unwrap(),
-            ],
+            vec![serde_json::from_str(r#"{"n":"grafana","c":2.1,"m":128.0,"u":true}"#).unwrap()],
         );
 
         let _connected = Page::Monitoring.view(&state);
@@ -279,6 +276,14 @@ mod tests {
             .unwrap(),
         ];
         state.beszel.selected = Some("s1".to_string());
+
+        // The detail card draws nothing below its header without the machine's
+        // current stats. This test once omitted them, stopped at "No metrics
+        // recorded yet", and passed without ever building a chart.
+        state.beszel.stats.insert(
+            "s1".to_string(),
+            serde_json::from_str(r#"{"cpu":18.1,"mp":16.0,"dp":65.0}"#).unwrap(),
+        );
 
         // A series with movement in every metric the charts plot, including the
         // eight sensors that drive the emphasis chart.
@@ -344,7 +349,10 @@ mod tests {
         let install = beszel_client::AgentInstall::new("nas.ts.net", "ssh-ed25519 AAAA");
         let command = install.remote_command();
 
-        assert!(command.contains("sudo"), "the command must not hide that it uses root");
+        assert!(
+            command.contains("sudo"),
+            "the command must not hide that it uses root"
+        );
 
         state.beszel.pending_install = Some(crate::app::beszel::PendingInstall {
             peer_id: "nABC".to_string(),

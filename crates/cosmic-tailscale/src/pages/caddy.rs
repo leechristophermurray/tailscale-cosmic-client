@@ -11,8 +11,8 @@ use cosmic::{Apply, Element, theme, widget};
 
 use crate::app::caddy::{CaddyState, Connection};
 use crate::app::message::Message;
-use crate::fl;
 use crate::app::state::State;
+use crate::fl;
 use crate::ui::{Tone, icons, widgets};
 
 pub fn view(state: &State) -> Element<'_, Message> {
@@ -39,7 +39,10 @@ fn target_card(state: &State) -> Element<'_, Message> {
     let candidates = state.caddy_candidates();
 
     let mut column = widget::Column::new()
-        .push(widgets::section_header(icons::SERVICES, fl!("caddy-server")))
+        .push(widgets::section_header(
+            icons::SERVICES,
+            fl!("caddy-server"),
+        ))
         .spacing(spacing.space_s);
 
     if candidates.is_empty() {
@@ -79,8 +82,7 @@ fn target_card(state: &State) -> Element<'_, Message> {
                     } else {
                         fl!("caddy-connect")
                     },
-                    (!caddy.is_busy() && caddy.target.is_some())
-                        .then_some(Message::CaddyConnect),
+                    (!caddy.is_busy() && caddy.target.is_some()).then_some(Message::CaddyConnect),
                 )
                 .class(theme::Button::Suggested),
             )
@@ -108,20 +110,22 @@ fn connection_status(caddy: &CaddyState) -> Element<'_, Message> {
             fl!("caddy-not-connected"),
             fl!("caddy-not-connected-detail"),
         ),
-        Connection::Connecting => (
-            Tone::Caution,
-            fl!("caddy-connecting"),
-            fl!("caddy-probing"),
-        ),
+        Connection::Connecting => (Tone::Caution, fl!("caddy-connecting"), fl!("caddy-probing")),
         Connection::Direct(endpoint) => (
             Tone::Positive,
             fl!("caddy-connected-direct"),
-            fl!("caddy-connected-direct-detail", endpoint = endpoint.to_string()),
+            fl!(
+                "caddy-connected-direct-detail",
+                endpoint = endpoint.to_string()
+            ),
         ),
         Connection::Tunnelled(endpoint) => (
             Tone::Positive,
             fl!("caddy-connected-tunnel"),
-            fl!("caddy-connected-tunnel-detail", endpoint = endpoint.to_string()),
+            fl!(
+                "caddy-connected-tunnel-detail",
+                endpoint = endpoint.to_string()
+            ),
         ),
         Connection::Failed(error) => (Tone::Critical, fl!("caddy-unreachable"), error.clone()),
     };

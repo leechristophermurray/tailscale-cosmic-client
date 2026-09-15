@@ -93,7 +93,10 @@ impl State {
         self.prefs
             .as_deref()
             .and_then(Prefs::user_profile)
-            .map_or_else(|| "?".to_string(), tailscale_localapi::UserProfile::initials)
+            .map_or_else(
+                || "?".to_string(),
+                tailscale_localapi::UserProfile::initials,
+            )
     }
 
     /// Whether the user wants the tunnel up. Reflects prefs rather than the

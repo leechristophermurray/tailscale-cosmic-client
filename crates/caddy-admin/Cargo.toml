@@ -15,3 +15,6 @@ hyper-util.workspace = true
 http-body-util.workspace = true
 thiserror.workspace = true
 tracing.workspace = true
+
+[dev-dependencies]
+http-stub.workspace = true

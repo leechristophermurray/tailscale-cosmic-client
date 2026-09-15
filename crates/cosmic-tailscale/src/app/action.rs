@@ -79,7 +79,12 @@ pub fn waiting_files(api: &LocalApi) -> Task<Message> {
 pub fn apply_prefs(api: &LocalApi, prefs: MaskedPrefs) -> Task<Message> {
     let api = api.clone();
     cosmic::task::future(async move {
-        Message::PrefsApplied(api.set_prefs(prefs).await.map(Arc::new).map_err(Failure::from))
+        Message::PrefsApplied(
+            api.set_prefs(prefs)
+                .await
+                .map(Arc::new)
+                .map_err(Failure::from),
+        )
     })
 }
 

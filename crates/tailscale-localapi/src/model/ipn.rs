@@ -198,6 +198,5 @@ pub mod notify_mask {
 
     /// What the COSMIC front-ends ask for: state and prefs up front, live
     /// throughput, and never any private keys.
-    pub const CLIENT: u32 =
-        WATCH_ENGINE_UPDATES | INITIAL_STATE | INITIAL_PREFS | NO_PRIVATE_KEYS;
+    pub const CLIENT: u32 = WATCH_ENGINE_UPDATES | INITIAL_STATE | INITIAL_PREFS | NO_PRIVATE_KEYS;
 }

@@ -134,7 +134,13 @@ impl Applet {
     /// Which icon the panel should show right now.
     #[must_use]
     pub fn icon_state(&self) -> IconState {
-        if !self.reachable || !self.backend.is_running() {
+        // The last backend state goes stale the moment the daemon disappears,
+        // so an unreachable daemon is disconnected — not "still starting".
+        if !self.reachable {
+            return IconState::Disconnected;
+        }
+
+        if !self.backend.is_running() {
             return match self.backend {
                 BackendState::Starting => IconState::Pending,
                 _ if self.backend.needs_attention() => IconState::Pending,
@@ -415,9 +421,10 @@ impl cosmic::Application for Applet {
 
         // A pinned metric rides next to the icon, which is the point of
         // pinning: seeing a server's load without opening anything.
-        let pinned_label = self.monitoring.pinned_system().map(|system| {
-            format!("{:.0}%", system.info.cpu.max(system.info.memory_pct))
-        });
+        let pinned_label = self
+            .monitoring
+            .pinned_system()
+            .map(|system| format!("{:.0}%", system.info.cpu.max(system.info.memory_pct)));
 
         let button = match pinned_label {
             // Panel sizing is the applet Context's job, so the composed
@@ -446,42 +453,45 @@ impl cosmic::Application for Applet {
 
                 self.core.applet.button_from_element(content, true)
             }
-            None => self.core.applet.icon_button_from_handle(state.icon().into()),
+            None => self
+                .core
+                .applet
+                .icon_button_from_handle(state.icon().into()),
         }
-            .on_press_with_rectangle(move |offset, bounds| {
-                if let Some(id) = open {
-                    return Message::Surface(destroy_popup(id));
-                }
+        .on_press_with_rectangle(move |offset, bounds| {
+            if let Some(id) = open {
+                return Message::Surface(destroy_popup(id));
+            }
 
-                Message::Surface(app_popup::<Applet>(
-                    |_| Default::default(),
-                    move |applet: &mut Applet| {
-                        let id = Id::unique();
-                        applet.popup = Some(id);
+            Message::Surface(app_popup::<Applet>(
+                |_| Default::default(),
+                move |applet: &mut Applet| {
+                    let id = Id::unique();
+                    applet.popup = Some(id);
 
-                        let mut settings = applet.core.applet.get_popup_settings(
-                            applet.core.main_window_id().unwrap(),
-                            id,
-                            None,
-                            None,
-                            None,
-                        );
+                    let mut settings = applet.core.applet.get_popup_settings(
+                        applet.core.main_window_id().unwrap(),
+                        id,
+                        None,
+                        None,
+                        None,
+                    );
 
-                        settings.positioner.anchor_rect = Rectangle {
-                            x: (bounds.x - offset.x) as i32,
-                            y: (bounds.y - offset.y) as i32,
-                            width: bounds.width as i32,
-                            height: bounds.height as i32,
-                        };
+                    settings.positioner.anchor_rect = Rectangle {
+                        x: (bounds.x - offset.x) as i32,
+                        y: (bounds.y - offset.y) as i32,
+                        width: bounds.width as i32,
+                        height: bounds.height as i32,
+                    };
 
-                        settings
-                    },
-                    Some(Box::new(|applet: &Applet| {
-                        Element::from(applet.core.applet.popup_container(popup::view(applet)))
-                            .map(cosmic::Action::App)
-                    })),
-                ))
-            });
+                    settings
+                },
+                Some(Box::new(|applet: &Applet| {
+                    Element::from(applet.core.applet.popup_container(popup::view(applet)))
+                        .map(cosmic::Action::App)
+                })),
+            ))
+        });
 
         self.core
             .applet
@@ -497,5 +507,311 @@ impl cosmic::Application for Applet {
 
     fn view_window(&self, _id: Id) -> Element<'_, Message> {
         popup::view(self)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    //! The applet's state and panel icon, driven directly.
+    //!
+    //! `OpenMainWindow` (without a token) and `OpenAdminConsole` act immediately
+    //! rather than returning a task, so running them here would launch an app or
+    //! a browser. They are deliberately not exercised.
+
+    use super::*;
+    use cosmic::Application as _;
+
+    fn applet() -> Applet {
+        Applet {
+            core: Core::default(),
+            popup: None,
+            api: LocalApi::with_socket("/nonexistent/tailscaled.sock"),
+            status: None,
+            prefs: None,
+            backend: BackendState::Unknown,
+            reachable: true,
+            suspended: false,
+            token_sender: None,
+            monitoring: monitoring::MonitoringState::default(),
+        }
+    }
+
+    fn status() -> Arc<Status> {
+        Arc::new(
+            serde_json::from_str(include_str!(
+                "../../../tailscale-localapi/tests/fixtures/status.json"
+            ))
+            .expect("fixture decodes"),
+        )
+    }
+
+    fn prefs(json: &str) -> Arc<Prefs> {
+        Arc::new(serde_json::from_str(json).expect("prefs decode"))
+    }
+
+    fn systems(json: &str) -> Arc<Vec<beszel_client::SystemRecord>> {
+        Arc::new(serde_json::from_str(json).expect("systems decode"))
+    }
+
+    // ---- the panel icon --------------------------------------------------------
+
+    #[test]
+    fn the_icon_follows_the_connection() {
+        let mut applet = applet();
+
+        applet.backend = BackendState::Stopped;
+        assert_eq!(applet.icon_state(), IconState::Disconnected);
+
+        applet.backend = BackendState::Starting;
+        assert_eq!(applet.icon_state(), IconState::Pending);
+
+        applet.backend = BackendState::NeedsLogin;
+        assert_eq!(
+            applet.icon_state(),
+            IconState::Pending,
+            "a login is waiting on the user"
+        );
+
+        applet.backend = BackendState::Running;
+        applet.prefs = Some(prefs(r#"{"WantRunning":true,"ExitNodeID":""}"#));
+        assert_eq!(applet.icon_state(), IconState::Connected);
+
+        applet.prefs = Some(prefs(r#"{"WantRunning":true,"ExitNodeID":"nEXIT"}"#));
+        assert_eq!(applet.icon_state(), IconState::ExitNode);
+    }
+
+    /// The last known state goes stale the moment the daemon disappears. A
+    /// daemon that died while starting must not leave "connecting" showing.
+    #[test]
+    fn an_unreachable_daemon_shows_disconnected_whatever_it_last_said() {
+        let mut applet = applet();
+
+        for last in [
+            BackendState::Running,
+            BackendState::Starting,
+            BackendState::NeedsLogin,
+        ] {
+            applet.backend = last;
+            applet.reachable = false;
+            assert_eq!(
+                applet.icon_state(),
+                IconState::Disconnected,
+                "unreachable after {last:?}"
+            );
+        }
+    }
+
+    /// Each state needs its own silhouette: the panel draws symbolic icons in a
+    /// single tint, so shape is the only thing that tells them apart.
+    #[test]
+    fn connected_disconnected_and_exit_node_look_different() {
+        let names: std::collections::HashSet<String> = [
+            IconState::Disconnected,
+            IconState::Connected,
+            IconState::ExitNode,
+        ]
+        .into_iter()
+        .map(|state| format!("{:?}", state.icon()))
+        .collect();
+
+        assert_eq!(names.len(), 3);
+    }
+
+    #[test]
+    fn the_tooltip_names_the_tailnet_when_connected() {
+        assert!(
+            IconState::Connected
+                .tooltip("example.ts.net")
+                .contains("example.ts.net")
+        );
+        assert!(
+            IconState::ExitNode
+                .tooltip("example.ts.net")
+                .contains("example.ts.net")
+        );
+        assert!(
+            !IconState::Disconnected
+                .tooltip("example.ts.net")
+                .contains("example.ts.net")
+        );
+    }
+
+    // ---- daemon state ------------------------------------------------------------
+
+    #[test]
+    fn a_failed_status_poll_marks_the_daemon_unreachable() {
+        let mut applet = applet();
+        let _ = applet.update(Message::StatusLoaded(Some(status())));
+        assert!(applet.reachable);
+        assert_eq!(applet.backend, BackendState::Running);
+
+        let _ = applet.update(Message::StatusLoaded(None));
+        assert!(!applet.reachable);
+        assert_eq!(applet.icon_state(), IconState::Disconnected);
+    }
+
+    #[test]
+    fn a_bus_state_change_is_applied_and_rereads_the_peer_map() {
+        let mut applet = applet();
+        let task = applet.update(Message::DaemonEvent(Arc::new(tailscale_localapi::Notify {
+            state: Some(BackendState::Stopped),
+            prefs: Some(serde_json::from_str(r#"{"WantRunning":false}"#).unwrap()),
+            ..Default::default()
+        })));
+
+        assert_eq!(applet.backend, BackendState::Stopped);
+        assert!(!applet.want_running());
+        assert!(
+            task.units() > 0,
+            "the exit-node list may be stale after a state change"
+        );
+    }
+
+    // ---- suspend ------------------------------------------------------------------
+
+    #[test]
+    fn a_suspend_resumes_unless_the_user_reconnected_first() {
+        let mut applet = applet();
+        let _ = applet.update(Message::SuspendForAnHour);
+        assert!(applet.suspended);
+
+        let task = applet.update(Message::SuspendElapsed);
+        assert!(task.units() > 0, "the tunnel comes back");
+        assert!(!applet.suspended);
+
+        let mut applet = self::applet();
+        let _ = applet.update(Message::SuspendForAnHour);
+        let _ = applet.update(Message::SetConnected(true));
+        assert!(
+            !applet.suspended,
+            "reconnecting by hand cancels the suspend"
+        );
+        let task = applet.update(Message::SuspendElapsed);
+        assert_eq!(task.units(), 0, "so the timer firing does nothing");
+    }
+
+    #[test]
+    fn an_invalid_exit_node_index_writes_nothing() {
+        let mut applet = applet();
+        let _ = applet.update(Message::StatusLoaded(Some(status())));
+        assert_eq!(applet.update(Message::ExitNodeSelected(42)).units(), 0);
+        assert!(
+            applet.update(Message::ExitNodeSelected(0)).units() > 0,
+            "direct mesh is always valid"
+        );
+    }
+
+    // ---- monitoring ----------------------------------------------------------------
+
+    const TWO: &str = r#"[
+      {"id":"s1","name":"homeforge","host":"100.101.0.5","status":"up","info":{"cpu":18.0,"mp":15.0,"dp":64.0}},
+      {"id":"s2","name":"nas","host":"nas","status":"up","info":{"cpu":2.0,"mp":20.0,"dp":95.0,"sv":[30,0]}}
+    ]"#;
+
+    #[test]
+    fn no_hub_configured_leaves_monitoring_hidden() {
+        let mut applet = applet();
+        let _ = applet.update(Message::MonitoringLoaded(None));
+        assert!(!applet.monitoring.configured);
+        assert!(applet.monitoring.pinned_system().is_none());
+    }
+
+    #[test]
+    fn pinning_shows_that_machine_and_unpinning_clears_it() {
+        let mut applet = applet();
+        let _ = applet.update(Message::MonitoringLoaded(Some(systems(TWO))));
+        assert!(applet.monitoring.configured);
+
+        let _ = applet.update(Message::PinSystem("s2".into()));
+        assert_eq!(
+            applet.monitoring.pinned_system().map(|s| s.name.as_str()),
+            Some("nas")
+        );
+
+        let _ = applet.update(Message::UnpinSystem);
+        assert!(applet.monitoring.pinned_system().is_none());
+    }
+
+    /// A pinned machine the hub stops monitoring would otherwise leave a frozen
+    /// number in the panel indefinitely.
+    #[test]
+    fn a_pin_the_hub_no_longer_reports_is_dropped() {
+        let mut applet = applet();
+        let _ = applet.update(Message::MonitoringLoaded(Some(systems(TWO))));
+        let _ = applet.update(Message::PinSystem("s2".into()));
+
+        let only_first = r#"[{"id":"s1","name":"homeforge","status":"up","info":{}}]"#;
+        let _ = applet.update(Message::MonitoringLoaded(Some(systems(only_first))));
+
+        assert!(applet.monitoring.pinned.is_none());
+    }
+
+    #[test]
+    fn unhealthy_machines_are_picked_out() {
+        let mut applet = applet();
+        let with_down = r#"[
+          {"id":"a","name":"fine","status":"up","info":{"dp":40.0,"mp":30.0}},
+          {"id":"b","name":"full","status":"up","info":{"dp":93.0}},
+          {"id":"c","name":"gone","status":"down","info":{}},
+          {"id":"d","name":"failing","status":"up","info":{"sv":[20,2]}}
+        ]"#;
+        let _ = applet.update(Message::MonitoringLoaded(Some(systems(with_down))));
+
+        let mut names: Vec<&str> = applet
+            .monitoring
+            .unhealthy()
+            .iter()
+            .map(|s| s.name.as_str())
+            .collect();
+        names.sort_unstable();
+        assert_eq!(names, ["failing", "full", "gone"]);
+    }
+
+    #[test]
+    fn a_peer_is_matched_to_its_monitored_machine() {
+        let mut applet = applet();
+        let _ = applet.update(Message::StatusLoaded(Some(status())));
+        let _ = applet.update(Message::MonitoringLoaded(Some(systems(TWO))));
+
+        let status = applet.status.clone().expect("status");
+        let forge = status
+            .peer
+            .values()
+            .find(|p| p.display_name() == "homeforge")
+            .expect("fixture has homeforge");
+
+        assert_eq!(
+            applet.monitoring.system_for(forge).map(|s| s.id.as_str()),
+            Some("s1")
+        );
+    }
+
+    // ---- rendering -------------------------------------------------------------------
+
+    /// The flyout has distinct branches for an unreachable daemon, no status
+    /// yet, and a populated tailnet with monitoring; none may panic.
+    #[test]
+    fn the_flyout_renders_in_every_state() {
+        let unreachable = Applet {
+            reachable: false,
+            ..applet()
+        };
+        let _ = popup::view(&unreachable);
+
+        let empty = applet();
+        let _ = popup::view(&empty);
+
+        let mut populated = applet();
+        let _ = populated.update(Message::StatusLoaded(Some(status())));
+        let _ = populated.update(Message::PrefsLoaded(Some(prefs(r#"{"WantRunning":true}"#))));
+        let _ = populated.update(Message::MonitoringLoaded(Some(systems(TWO))));
+        let _ = populated.update(Message::PinSystem("s1".into()));
+        let _ = popup::view(&populated);
+
+        let suspended = Applet {
+            suspended: true,
+            ..applet()
+        };
+        let _ = popup::view(&suspended);
     }
 }

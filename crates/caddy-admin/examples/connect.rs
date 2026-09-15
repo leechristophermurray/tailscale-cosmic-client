@@ -42,7 +42,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             server.routes.len()
         );
         for site in server.sites() {
-            let removable = if site.id.is_some() { "" } else { "  (not removable: no @id)" };
+            let removable = if site.id.is_some() {
+                ""
+            } else {
+                "  (not removable: no @id)"
+            };
             println!("    {:<24} -> {}{removable}", site.host, site.target);
         }
     }

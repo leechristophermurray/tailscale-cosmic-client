@@ -366,3 +366,8 @@ beszel-load-1 = 1 min
 beszel-load-5 = 5 min
 beszel-load-15 = 15 min
 beszel-temp-caption = Hottest: { $sensor } at { $celsius }°C, with { $others } other sensors shown for context
+
+## Machines that are no longer on the tailnet
+
+taildrop-machine-gone = That machine is no longer on your tailnet. Your files are still queued — choose another.
+caddy-machine-gone = The machine you last managed is no longer on your tailnet. Pick another.

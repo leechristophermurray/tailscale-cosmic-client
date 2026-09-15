@@ -14,9 +14,7 @@ use cosmic::widget::icon::{IconFallback, Named, from_name};
 /// The installed location comes first; the second entry makes an uninstalled
 /// `cargo run` from the source tree show the right icons too.
 static EXTRA_PATHS: LazyLock<Vec<PathBuf>> = LazyLock::new(|| {
-    let mut paths = vec![PathBuf::from(
-        "/usr/share/icons/hicolor/scalable/status",
-    )];
+    let mut paths = vec![PathBuf::from("/usr/share/icons/hicolor/scalable/status")];
 
     if let Ok(dir) = std::env::var("CARGO_MANIFEST_DIR") {
         paths.push(

@@ -102,7 +102,12 @@ sudo just install
 
 Both recipes install the same set: the two binaries, all three desktop entries
 (the window, the applet, and the "Send via Taildrop…" file-manager action), the
-AppStream metadata, and the icons.
+AppStream metadata, and the icons. Both — along with `uninstall`,
+`uninstall-user` and the release tarball — go through one script,
+`scripts/install.sh`, so they cannot drift apart. For a distribution package,
+stage into a directory with `just rootdir=/path/to/stage install`; a staged tree
+gets no `mimeinfo.cache` or icon cache, since the package manager's triggers
+build those on the target system.
 
 The system-wide `install` deliberately does not build. Running `sudo just install`
 on a recipe that compiled first would run `cargo` as root and leave root-owned
@@ -121,6 +126,23 @@ the matching file descriptor to the applets it launches; a terminal in a COSMIC
 session inherits the variable but not the descriptor, and libcosmic's
 activation-token thread panics trying to adopt the stale fd. The recipe clears
 the variable so the applet connects to Wayland normally.
+
+### From a release
+
+Tagged releases on GitHub carry a tarball built by CI, with a `.sha256` beside
+it. It needs no Rust toolchain:
+
+```sh
+sha256sum -c cosmic-tailscale-*-x86_64-linux.tar.gz.sha256
+tar -xzf cosmic-tailscale-*-x86_64-linux.tar.gz
+cd cosmic-tailscale-*-x86_64-linux
+./install-tailscale.sh   # if Tailscale is not set up yet
+./install.sh             # into ~/.local; or: sudo ./install.sh --prefix /usr
+```
+
+`just package` builds the same tarball locally, into `dist/`.
+
+### Poking at it
 
 To see what the daemon reports without starting a GUI:
 
@@ -296,20 +318,95 @@ embedded, and the desktop's language preference selects from it at startup.
 ## Testing
 
 ```sh
-just test
+just test        # Rust tests, installer scenarios, packaging checks
+just coverage    # line coverage of product code (--html for a report)
 ```
 
-The `tailscale-localapi` tests run against a redacted capture of real daemon
-output rather than hand-written JSON, because the failure modes worth catching
-are the ones hand-written samples do not reproduce — Go marshalling empty slices
-and maps as `null`, acronym casing in field names like `TailscaleIPs` and
-`ExitNodeAllowLANAccess`, and `BackendState` arriving as a string from `status`
-but an integer from the IPN bus.
+`just test` runs four layers:
 
-`cosmic-tailscale` builds every page's view from that same fixture, in both the
-populated and the just-launched-and-heard-nothing states. Rendering headlessly
-covers all six pages at once, which a screenshot of whichever page happens to be
-open does not.
+- **Rust tests** — decoding against a redacted capture of real daemon output;
+  the update loop driven message by message; every page rendered headlessly;
+  and each service client talking to `http-stub`, a stand-in server that records
+  requests exactly as sent. That last layer is what catches wire-level bugs — an
+  absolute-form request line, a notify mask one bit off — that no function-level
+  mock can see.
+- **`scripts/test-install-tailscale.sh`** — the installer run against simulated
+  machines, with fake `tailscale`, `systemctl`, `curl` and `sudo`. It installs
+  nothing and downloads nothing, so it behaves the same on any machine.
+- **`scripts/test-install.sh`** — `install.sh` and `package.sh` in a throwaway
+  `HOME` with stand-in binaries: the per-user, staged and tarball installs place
+  exactly the expected files, uninstall removes them, and two builds of the
+  tarball are byte-identical.
+- **`scripts/check-packaging.sh`** — shellcheck, `desktop-file-validate` and
+  `appstreamcli`, each reported as skipped rather than passed when the tool is
+  not installed (`STRICT=1` fails instead, as CI does).
+
+`just coverage` needs `cargo-llvm-cov` and LLVM tools matching rustc's LLVM
+(`rustup component add llvm-tools-preview`, or a system `llvm-cov` of the same
+major version, which it finds itself). It counts product code only: tests live
+in trailing `#[cfg(test)]` modules, which always execute and would otherwise
+report themselves as covered, so the script drops them, along with `tests/`,
+`examples/` and the test-support crate.
+
+Tests that spawn a fake `ssh` hold a shared lock while writing the script and
+spawning it. Without it, a parallel test forking mid-write inherits the open
+file, and the kernel refuses to execute it (`ETXTBSY`) — which failed these
+tests about a third of the time.
+
+Still untested: `view` code outside the pages, chart drawing (canvas `draw`
+only runs with a renderer), subscriptions, the keyring, and notifications.
+Wayland drag-and-drop and the applet inside a real `cosmic-panel` can only be
+checked by hand.
+
+## Continuous integration
+
+`.github/workflows/ci.yml` runs on every push to `main` and every pull request:
+
+| Job | What it runs |
+| --- | --- |
+| Format | `cargo fmt --check` |
+| Clippy | `cargo clippy --workspace --all-targets -- -D warnings` |
+| Test | `cargo test --workspace` |
+| Scripts and packaging | both script test suites, then `check-packaging.sh` with `STRICT=1`, in a Fedora container (see below) |
+| Minimum Rust version | `cargo check` on the `rust-version` from `Cargo.toml` |
+| Coverage | `scripts/coverage.sh`; the table goes to the run summary, `lcov.info` to an artifact |
+| Package | release build and tarball, uploaded as an artifact (not on pull requests) |
+
+Every Cargo step uses `--locked`, so a `Cargo.lock` that is out of date fails
+rather than being silently rewritten. The runner needs only `libxkbcommon-dev`
+(the one library the binaries link) and `cmake` (for `aws-lc-sys`) beyond the
+usual build tools — a list found by building the workspace in a bare
+`ubuntu:24.04` container rather than copied from another project. The shared
+setup lives in `.github/actions/setup`.
+
+The scripts job runs in a `fedora:44` container for one reason: COSMIC's
+desktop entries use `Categories=COSMIC`, which desktop-file-utils registered in
+0.28, and Ubuntu 24.04 still ships 0.27. The container runs as root, and the
+installer suite, whose scenarios are all a desktop user running the installer,
+re-runs itself as `nobody` there.
+
+Third-party actions are pinned to full commit SHAs, with the version in a
+comment; Dependabot proposes updates to them, and to crates, weekly. `libcosmic`
+is excluded — it is pinned to a git revision, and moving it is a change to test
+deliberately. The Rust cache is written only from `main`, so pull requests read
+it but cannot alter what `main` builds from.
+
+### Releasing
+
+1. Bump `version` under `[workspace.package]` in `Cargo.toml`, and commit.
+2. Tag it and push the tag:
+
+   ```sh
+   git tag -s v0.2.0 -m v0.2.0
+   git push origin v0.2.0
+   ```
+
+`.github/workflows/release.yml` then checks that the tag matches the version in
+`Cargo.toml`, runs the whole of CI against the tagged commit, verifies the
+tarball's checksum, and publishes a GitHub release with it and generated notes.
+A tag with a suffix, such as `v0.2.0-rc.1`, becomes a pre-release. The publish
+job is the only one with write access to the repository, and it builds nothing:
+it ships the tarball that CI built and tested in the same run.
 
 ## License
 

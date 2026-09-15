@@ -6,8 +6,8 @@ use cosmic::{Apply, Element, theme, widget};
 use tailscale_localapi::{PeerStatus, Route};
 
 use crate::app::message::Message;
-use crate::fl;
 use crate::app::state::State;
+use crate::fl;
 use crate::ui::{Tone, format, icons, widgets};
 
 pub fn view(state: &State) -> Element<'_, Message> {
@@ -151,9 +151,9 @@ fn peer_row<'a>(state: &'a State, peer: &'a PeerStatus, is_self: bool) -> Elemen
         .padding(spacing.space_xs)
         .width(Length::Fill)
         .selected(selected)
-        .class(theme::Button::ListItem([
-            theme::active().cosmic().corner_radii.radius_s[0]; 4
-        ]))
+        .class(theme::Button::ListItem(
+            [theme::active().cosmic().corner_radii.radius_s[0]; 4],
+        ))
         .on_press(Message::SelectPeer(peer.id.clone()))
         .into()
 }
@@ -205,13 +205,19 @@ fn daemon_footer(state: &State) -> Element<'_, Message> {
     widget::Column::new()
         .push(
             widget::Row::new()
-                .push(widgets::section_header(icons::TAILNET, fl!("localapi-daemon")))
+                .push(widgets::section_header(
+                    icons::TAILNET,
+                    fl!("localapi-daemon"),
+                ))
                 .push(widget::Space::new().width(Length::Fill))
                 .push(widgets::status_label(detail, tone))
                 .align_y(Alignment::Center)
                 .width(Length::Fill),
         )
-        .push(widget::text::monotext(format!("unix://{}", tailscale_localapi::DEFAULT_SOCKET)).size(11.0))
+        .push(
+            widget::text::monotext(format!("unix://{}", tailscale_localapi::DEFAULT_SOCKET))
+                .size(11.0),
+        )
         .spacing(spacing.space_xxs)
         .apply(widget::container)
         .padding(spacing.space_xs)
@@ -292,7 +298,11 @@ fn mesh_quality<'a>(state: &'a State, peer: &'a PeerStatus) -> Element<'a, Messa
                 } else {
                     fl!("route-offline")
                 },
-                if peer.online { Tone::Positive } else { Tone::Neutral },
+                if peer.online {
+                    Tone::Positive
+                } else {
+                    Tone::Neutral
+                },
             ))
             .push(widget::text::caption(home))
             .spacing(spacing.space_xxxs)
@@ -319,9 +329,7 @@ fn mesh_quality<'a>(state: &'a State, peer: &'a PeerStatus) -> Element<'a, Messa
         ),
         Some(ping) => (fl!("route-unreachable"), ping.err.clone(), Tone::Critical),
         None => match peer.route() {
-            Route::Direct(endpoint) => {
-                (fl!("route-direct"), endpoint.to_string(), Tone::Positive)
-            }
+            Route::Direct(endpoint) => (fl!("route-direct"), endpoint.to_string(), Tone::Positive),
             Route::Derp(region) => (
                 fl!("route-relayed"),
                 fl!("route-derp", region = region),
@@ -554,8 +562,10 @@ fn taildrop_prompt<'a>(state: &'a State, peer: &'a PeerStatus) -> Element<'a, Me
         .pending_drop
         .iter()
         .map(|p| {
-            p.file_name()
-                .map_or_else(|| p.display().to_string(), |n| n.to_string_lossy().into_owned())
+            p.file_name().map_or_else(
+                || p.display().to_string(),
+                |n| n.to_string_lossy().into_owned(),
+            )
         })
         .collect();
 

@@ -5,8 +5,8 @@ use cosmic::iced::{Alignment, Length};
 use cosmic::{Apply, Element, theme, widget};
 
 use crate::app::message::Message;
-use crate::fl;
 use crate::app::state::{KeyExpiry, State};
+use crate::fl;
 use crate::ui::{Tone, format, icons, widgets};
 
 pub fn view(state: &State) -> Element<'_, Message> {
@@ -52,10 +52,9 @@ fn key_card(state: &State) -> Element<'_, Message> {
         .spacing(spacing.space_xs);
 
     column = column.push(widget::text::caption(match expiry {
-        KeyExpiry::Expires { expiry, .. } => fl!(
-            "key-expiry-explain",
-            date = format::calendar_date(expiry)
-        ),
+        KeyExpiry::Expires { expiry, .. } => {
+            fl!("key-expiry-explain", date = format::calendar_date(expiry))
+        }
         KeyExpiry::Disabled => fl!("key-expiry-off-explain"),
         KeyExpiry::Unknown => fl!("key-expiry-waiting"),
     }));
@@ -97,7 +96,10 @@ fn inbound_card(state: &State) -> Element<'_, Message> {
     let shields_on = prefs.is_some_and(|p| p.shields_up);
 
     widget::Column::new()
-        .push(widgets::section_header(icons::ACCESS, fl!("inbound-access")))
+        .push(widgets::section_header(
+            icons::ACCESS,
+            fl!("inbound-access"),
+        ))
         .push(switch_row(
             state,
             fl!("accept-ssh"),

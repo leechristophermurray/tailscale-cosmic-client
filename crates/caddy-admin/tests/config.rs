@@ -65,7 +65,10 @@ fn builds_a_reverse_proxy_route() {
         json["match"][0]["host"][0],
         serde_json::json!("grafana.example.ts.net")
     );
-    assert_eq!(json["handle"][0]["handler"], serde_json::json!("reverse_proxy"));
+    assert_eq!(
+        json["handle"][0]["handler"],
+        serde_json::json!("reverse_proxy")
+    );
     assert_eq!(
         json["handle"][0]["upstreams"][0]["dial"],
         serde_json::json!("127.0.0.1:3000")
@@ -83,7 +86,10 @@ fn a_route_with_no_handler_says_so() {
 
 #[test]
 fn endpoints_bracket_ipv6_literals() {
-    assert_eq!(Endpoint::tailnet("100.64.0.1").authority(), "100.64.0.1:2019");
+    assert_eq!(
+        Endpoint::tailnet("100.64.0.1").authority(),
+        "100.64.0.1:2019"
+    );
     assert_eq!(Endpoint::local(12019).authority(), "127.0.0.1:12019");
 
     // An unbracketed IPv6 authority would make the request line unparseable.
