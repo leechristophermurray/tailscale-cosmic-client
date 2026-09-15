@@ -10,10 +10,15 @@ Two front-ends share one backend:
 - **`cosmic-applet-tailscale`** — a panel applet for the things you do in
   passing: toggle the tunnel, switch exit node, copy a peer's address.
 - **`cosmic-tailscale`** — a window for everything else: machines, exit nodes,
-  published services, access control, and a Caddy manager for tailnet peers.
+  Taildrop, published services, a Caddy manager and Beszel hardware monitoring
+  for tailnet peers, and access control.
 
 Both inherit the desktop's theme, accent colour, typography, and density with no
 configuration of their own.
+
+![The panel applet's popup open over the main window, on the Machines page](docs/assets/img/screenshots/applet-and-window.png)
+
+<sub>Tailnet names and addresses are masked in every screenshot.</sub>
 
 ## Repository layout
 
@@ -41,18 +46,28 @@ crates/
       ui/                    formatting, icon names, shared widgets
   cosmic-applet-tailscale/   the panel applet
     src/applet/              popup, panel icon states, activation tokens
+  http-stub/                 test-only HTTP server that records raw requests
 data/                        desktop entries, icons, AppStream metadata
+scripts/                     install, packaging, coverage, and their tests
+docs/                        the brief, design notes, mockups, screenshots
+.github/                     CI, release and Dependabot configuration
 ```
 
-The dependency direction is strictly one way: `tailscale-localapi` and
-`caddy-admin` know nothing about `libcosmic`, which keeps them testable without
-a compositor and usable from anything else.
+The dependency direction is strictly one way: `tailscale-localapi`,
+`caddy-admin` and `beszel-client` know nothing about `libcosmic`, which keeps
+them testable without a compositor and usable from anything else.
 
 ## Requirements
 
 - Tailscale — `just tailscale` installs and configures it if needed
-- Rust 1.93 or newer
-- `libxkbcommon`, `wayland`, `libinput`, `fontconfig` development packages
+- Rust 1.93 or newer, and [`just`](https://github.com/casey/just)
+- A C compiler, `pkg-config`, `cmake`, and the `libxkbcommon` development
+  package (`libxkbcommon-devel` on Fedora, `libxkbcommon-dev` on Debian and
+  Ubuntu)
+- A COSMIC session to run it in
+
+That list is complete: it is what a bare `ubuntu:24.04` container needed to
+build the workspace. Everything else, Wayland included, is loaded at runtime.
 
 ## Build and install
 
@@ -158,22 +173,65 @@ cargo run -p caddy-admin --example connect -- homeforge
 
 ## What it does
 
+### The panel applet
+
+The applet's icon shows the connection state at a glance; its popup, at the top
+right of the screenshot above, holds what you reach for in passing:
+
+- the tunnel switch, with the tailnet name and this machine's address;
+- the exit node picker, or a note that no peer advertises one;
+- recent peers, each copied to the clipboard with a click;
+- with a Beszel hub configured, a monitoring summary that names any unhealthy
+  machine and lists each one's CPU and memory; **pin** one to show its busier
+  figure beside the panel icon;
+- **Open Tailscale…**, **Suspend for 1 hour** and **Admin console**.
+
+Suspending turns the tunnel off and back on after an hour, unless you reconnect
+first.
+
+### The window
+
+Every page shares one header: the tailnet name and connection state, this
+machine's address, peer counts, the exit node in use, and the tunnel switch.
+Beneath it, **Recent peers & transfer targets** keeps your most-used machines
+one click away, beside a **Choose files…** shortcut for Taildrop. A status bar
+along the bottom shows the `tailscaled` version, live throughput, and how many
+DERP relays are in use.
+
 ### Machines
+
+![The Machines page, with this machine selected](docs/assets/img/screenshots/machines.png)
 
 A filterable list of every node, split into this machine, your devices, and
 machines shared with you. Each row shows how the peer is actually reached —
-a direct WireGuard path or a DERP relay — rather than just "online".
+a direct WireGuard path or a DERP relay — rather than just "online". Below the
+list, the LocalAPI card names the socket and daemon version the app is
+talking to.
 
 The detail pane has copyable IPv4, IPv6, and MagicDNS addresses, a latency probe
-that reports the real path, and one-click **SSH terminal**, which opens
-`tailscale ssh` in `cosmic-term`. Authentication comes from your tailnet
-identity, so there are no keys to distribute.
+that reports the real path, **Send file (Taildrop)**, and one-click **SSH
+terminal**, which opens `tailscale ssh` in `cosmic-term`. Authentication comes
+from your tailnet identity, so there are no keys to distribute. Status cards
+cover the platform, the peer endpoint, key expiry, and whether the machine
+accepts Tailscale SSH or offers itself as an exit node.
 
 ### Exit nodes
 
 Pick a peer to carry your internet traffic, or advertise this machine as an exit
 node. When a tailnet admin has not yet approved an advertised route, the page
 says so — advertising alone does not make a machine usable.
+
+### Taildrop
+
+![The Taildrop page: choose a machine, then select files](docs/assets/img/screenshots/taildrop.png)
+
+Sending and receiving files, in both directions, on one page. Choose a machine
+from those that can receive, then **Select files…** to open the desktop's own
+file chooser; the transfer starts as soon as you pick. Files can also be dropped
+onto the window (see [Desktop integration](#desktop-integration) for how
+dependable that is). Files are queued if you pick them before a machine, and
+sent when you choose one. Files sent to this machine wait under **Received
+files** until **Save all to Downloads**.
 
 ### Services & DNS
 
@@ -210,6 +268,12 @@ Two details are worth knowing, because both produce confusing failures:
 Hardware health from a [Beszel](https://beszel.dev) hub on your tailnet, beside
 the machines it belongs to: CPU, memory, disk, load, sensors, ZFS pools and
 per-container stats. The hub never needs to be on the public internet.
+
+![The Monitoring page, showing a machine's summary cards and charts over the last hour](docs/assets/img/screenshots/monitoring.png)
+
+Pick a monitored machine to see its summary cards and history. Memory is split
+into used and reclaimable, load is set against the thread count, and the sensors
+row highlights the hottest reading.
 
 Beszel's records use very short keys — memory percent is `mp`, temperatures are
 `t` — because they are written per machine per interval and kept for months. Two
@@ -263,13 +327,18 @@ Node key expiry with a countdown, Tailscale SSH, shields-up, and the subnet
 routes this machine advertises. When a tailnet has key expiry disabled, the page
 says that rather than inventing a countdown.
 
+### Preferences
+
+Whether to accept subnet routes and use the tailnet's DNS; the signed-in account,
+with **Sign in** or **Reauthenticate**; and the daemon's own health, including
+any warnings it reports.
+
 ## Desktop integration
 
-- **Taildrop** — its own page, both directions: choose a machine, then choose
-  files (or drop them), with received files and a Save action below. The drop
-  zone opens the desktop's own file chooser through the XDG portal, and the
-  **Send file** button on a machine does the same and starts the transfer as
-  soon as you pick. This is the dependable path.
+- **Taildrop** — the [Taildrop page](#taildrop)'s drop zone opens the desktop's
+  own file chooser through the XDG portal, and the **Send file** button on a
+  machine does the same and starts the transfer as soon as you pick. This is the
+  dependable path.
 - **Dragging** — the window is also a drop target, accepting both `text/uri-list`
   and the portal's file-transfer handover. This is best-effort: winit's
   `FileDropped` event never fires on Wayland, so the drop goes through
