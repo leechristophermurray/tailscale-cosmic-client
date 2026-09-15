@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>com.system76.CosmicTailscale</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MPL-2.0</project_license>
+  <name>Tailscale</name>
+  <summary>Manage your tailnet from the COSMIC desktop</summary>
+
+  <description>
+    <p>
+      A native Tailscale client for the COSMIC desktop. It talks to the local
+      tailscaled daemon over its UNIX socket, so it reflects the real state of
+      your tailnet without shelling out to the command line.
+    </p>
+    <ul>
+      <li>Browse every machine on your tailnet with live connection paths</li>
+      <li>Switch exit nodes, or offer this machine as one</li>
+      <li>Send files with Taildrop by dropping them onto the window</li>
+      <li>Open a Tailscale SSH session in cosmic-term with one click</li>
+      <li>Review what this machine publishes with serve and funnel</li>
+    </ul>
+  </description>
+
+  <launchable type="desktop-id">com.system76.CosmicTailscale.desktop</launchable>
+
+  <!-- Add <url type="homepage"> when this is published somewhere. -->
+
+  <developer id="com.system76">
+    <name>System76</name>
+  </developer>
+
+  <!-- Nothing in this application is age-restricted; it manages a VPN. -->
+  <content_rating type="oars-1.1"/>
+  <categories>
+    <category>Network</category>
+    <category>System</category>
+  </categories>
+
+  <recommends>
+    <control>keyboard</control>
+    <control>pointing</control>
+  </recommends>
+
+  <releases>
+    <release version="0.1.0" date="2026-09-14">
+      <description><p>First release.</p></description>
+    </release>
+  </releases>
+</component>

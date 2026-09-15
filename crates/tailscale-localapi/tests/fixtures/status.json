@@ -1,0 +1,361 @@
+{
+ "Version": "1.102.4-t3caf7d9e7-g084ee3b64",
+ "TUN": true,
+ "BackendState": "Running",
+ "HaveNodeKey": true,
+ "AuthURL": "",
+ "TailscaleIPs": [
+  "100.89.222.73",
+  "fd7a:115c:a1e0::4938:de4b"
+ ],
+ "Self": {
+  "ID": "nenpcEYJVH11CNTRL",
+  "NodeID": 2111500533116891,
+  "PublicKey": "nodekey:0000000000000000000000000000000000000000000000000000000000000000",
+  "HostName": "fedora",
+  "DNSName": "fedora.tailcaa06c.ts.net.",
+  "OS": "linux",
+  "UserID": 4049164187024120,
+  "TailscaleIPs": [
+   "100.89.222.73",
+   "fd7a:115c:a1e0::4938:de4b"
+  ],
+  "AllowedIPs": [
+   "100.89.222.73/32",
+   "fd7a:115c:a1e0::4938:de4b/128"
+  ],
+  "Addrs": [
+   "192.168.1.64:41641",
+   "199.126.37.80:41641",
+   "192.168.86.62:41641"
+  ],
+  "CurAddr": "",
+  "Relay": "sea",
+  "PeerRelay": "",
+  "RxBytes": 0,
+  "TxBytes": 0,
+  "Created": "2026-06-28T23:15:31.742434258Z",
+  "LastWrite": "0001-01-01T00:00:00Z",
+  "LastSeen": "0001-01-01T00:00:00Z",
+  "LastHandshake": "0001-01-01T00:00:00Z",
+  "Online": true,
+  "ExitNode": false,
+  "ExitNodeOption": false,
+  "Active": false,
+  "PeerAPIURL": [
+   "http://100.89.222.73:56712",
+   "http://[fd7a:115c:a1e0::4938:de4b]:40371"
+  ],
+  "TaildropTarget": 0,
+  "NoFileSharingReason": "",
+  "Capabilities": [
+   "HTTPS://TAILSCALE.COM/s/DEPRECATED-NODE-CAPS#see-https://github.com/tailscale/tailscale/issues/11508",
+   "default-auto-update",
+   "https",
+   "https://tailscale.com/cap/file-sharing",
+   "https://tailscale.com/cap/is-admin",
+   "https://tailscale.com/cap/is-owner",
+   "https://tailscale.com/cap/ssh",
+   "https://tailscale.com/cap/tailnet-lock",
+   "probe-udp-lifetime",
+   "ssh-behavior-v1",
+   "ssh-env-vars",
+   "store-appc-routes",
+   "tailnet-display-name"
+  ],
+  "CapMap": {
+   "default-auto-update": [
+    true
+   ],
+   "https": null,
+   "https://tailscale.com/cap/file-sharing": null,
+   "https://tailscale.com/cap/is-admin": null,
+   "https://tailscale.com/cap/is-owner": null,
+   "https://tailscale.com/cap/ssh": null,
+   "https://tailscale.com/cap/tailnet-lock": null,
+   "probe-udp-lifetime": null,
+   "ssh-behavior-v1": null,
+   "ssh-env-vars": null,
+   "store-appc-routes": null,
+   "tailnet-display-name": [
+    "lee.christopher.murray@gmail.com"
+   ]
+  },
+  "InNetworkMap": true,
+  "InMagicSock": false,
+  "InEngine": false
+ },
+ "Health": [],
+ "MagicDNSSuffix": "tailcaa06c.ts.net",
+ "CurrentTailnet": {
+  "Name": "alex@example.com",
+  "MagicDNSSuffix": "tailcaa06c.ts.net",
+  "MagicDNSEnabled": true
+ },
+ "CertDomains": [
+  "fedora.tailcaa06c.ts.net"
+ ],
+ "ExtraRecords": null,
+ "Peer": {
+  "nodekey:0000000000000000000000000000000000000000000000000000000000000001": {
+   "ID": "ndBunJobn621CNTRL",
+   "NodeID": 8168658165068688,
+   "PublicKey": "nodekey:0000000000000000000000000000000000000000000000000000000000000001",
+   "HostName": "homelab",
+   "DNSName": "homelab.tailcaa06c.ts.net.",
+   "OS": "linux",
+   "UserID": 4049164187024120,
+   "TailscaleIPs": [
+    "100.114.124.126",
+    "fd7a:115c:a1e0::5538:7c7f"
+   ],
+   "AllowedIPs": [
+    "100.114.124.126/32",
+    "fd7a:115c:a1e0::5538:7c7f/128"
+   ],
+   "Addrs": null,
+   "CurAddr": "",
+   "Relay": "sea",
+   "PeerRelay": "",
+   "RxBytes": 0,
+   "TxBytes": 0,
+   "Created": "2026-07-23T16:24:04.198409518Z",
+   "LastWrite": "0001-01-01T00:00:00Z",
+   "LastSeen": "0001-01-01T00:00:00Z",
+   "LastHandshake": "0001-01-01T00:00:00Z",
+   "Online": true,
+   "ExitNode": false,
+   "ExitNodeOption": false,
+   "Active": false,
+   "PeerAPIURL": [
+    "http://100.114.124.126:36845",
+    "http://[fd7a:115c:a1e0::5538:7c7f]:46957"
+   ],
+   "TaildropTarget": 1,
+   "NoFileSharingReason": "",
+   "InNetworkMap": true,
+   "InMagicSock": true,
+   "InEngine": false
+  },
+  "nodekey:0000000000000000000000000000000000000000000000000000000000000002": {
+   "ID": "nKt5wmZKZ821CNTRL",
+   "NodeID": 8395462553393376,
+   "PublicKey": "nodekey:0000000000000000000000000000000000000000000000000000000000000002",
+   "HostName": "Pixel 11 Pro Fold",
+   "DNSName": "pixel-11-pro-fold.tailcaa06c.ts.net.",
+   "OS": "android",
+   "UserID": 4049164187024120,
+   "TailscaleIPs": [
+    "100.124.149.56",
+    "fd7a:115c:a1e0::d38:9539"
+   ],
+   "AllowedIPs": [
+    "100.124.149.56/32",
+    "fd7a:115c:a1e0::d38:9539/128"
+   ],
+   "Addrs": null,
+   "CurAddr": "",
+   "Relay": "sea",
+   "PeerRelay": "",
+   "RxBytes": 0,
+   "TxBytes": 0,
+   "Created": "2026-08-20T19:31:16.350381467Z",
+   "LastWrite": "0001-01-01T00:00:00Z",
+   "LastSeen": "0001-01-01T00:00:00Z",
+   "LastHandshake": "0001-01-01T00:00:00Z",
+   "Online": true,
+   "ExitNode": false,
+   "ExitNodeOption": false,
+   "Active": false,
+   "PeerAPIURL": [
+    "http://100.124.149.56:1",
+    "http://[fd7a:115c:a1e0::d38:9539]:1"
+   ],
+   "TaildropTarget": 1,
+   "NoFileSharingReason": "",
+   "InNetworkMap": true,
+   "InMagicSock": true,
+   "InEngine": false
+  },
+  "nodekey:0000000000000000000000000000000000000000000000000000000000000003": {
+   "ID": "nAvq2MWCT411CNTRL",
+   "NodeID": 442034850164243,
+   "PublicKey": "nodekey:0000000000000000000000000000000000000000000000000000000000000003",
+   "HostName": "homepod",
+   "DNSName": "homepod.tailcaa06c.ts.net.",
+   "OS": "linux",
+   "UserID": 4049164187024120,
+   "TailscaleIPs": [
+    "100.93.38.85",
+    "fd7a:115c:a1e0::4c38:2656"
+   ],
+   "AllowedIPs": [
+    "100.93.38.85/32",
+    "fd7a:115c:a1e0::4c38:2656/128"
+   ],
+   "Addrs": null,
+   "CurAddr": "",
+   "Relay": "sea",
+   "PeerRelay": "",
+   "RxBytes": 0,
+   "TxBytes": 0,
+   "Created": "2026-07-08T23:33:10.184197111Z",
+   "LastWrite": "0001-01-01T00:00:00Z",
+   "LastSeen": "0001-01-01T00:00:00Z",
+   "LastHandshake": "0001-01-01T00:00:00Z",
+   "Online": true,
+   "ExitNode": false,
+   "ExitNodeOption": false,
+   "Active": false,
+   "PeerAPIURL": [
+    "http://100.93.38.85:49838",
+    "http://[fd7a:115c:a1e0::4c38:2656]:39647"
+   ],
+   "TaildropTarget": 1,
+   "NoFileSharingReason": "",
+   "sshHostKeys": [
+    "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCgr275NBW1Szu2YHcpfO/UlMSEPcL06w0T3SV9+yuQ8kINqm0kuW6Q4HMvQ21HXPQbDiOo3hz+6I16zicokEBYUkEhXVjvOImrCyJitRpptwozRAz1uqr+Oy7Bh4/cR3ClZTvitFLjyRPQKrBqyPpZvPLALtc+KNFC/raicj8ERV1C7hJTbs1DBy/ztMbizXPqv2SyIgLrcc0TY/JacoOSJ/gnxDS+P+J4fO2xIOfrj+yjYCZbHx1IJUaC1e6QfyDmb48XSxAeipXnBPM4BVV9AkCuD+GPIgNLvRDk7ZOMpqOg5vLgRcU0moBXuPlWPEbXQpto7na5svRxDNinYHLRiETmLjRU5wUaeaVQa1bCLyLkS84N7HyuDy/Df7pGkuINg2JK9rO+F9+O8FzrsnPg3j+Hz2pkkYjEq0QzJNLvSvFG8du4aNKmKkBciqPt2+AX4UmnOx6rePJ7NzSCCIHHwm+4UP8Ut8WHbrWY9Xq0wB758ZCTWtzay8oGUrCBIGE=",
+    "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBPDlOFsJw8CrqI8ZTb05EtIT0hFoBVDmhwCJt8FbeNaPu6jdEckulmBSsftdpuxK3K7qWF2va8yhe3GqUDDyJ0U=",
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAW98CSzX22UO02RHmXLh39i4obOvA9QO/4tDmAotwpK"
+   ],
+   "InNetworkMap": true,
+   "InMagicSock": true,
+   "InEngine": false
+  },
+  "nodekey:0000000000000000000000000000000000000000000000000000000000000004": {
+   "ID": "n5uN76kDwB21CNTRL",
+   "NodeID": 8828005807351264,
+   "PublicKey": "nodekey:0000000000000000000000000000000000000000000000000000000000000004",
+   "HostName": "homeforge",
+   "DNSName": "homeforge.tailcaa06c.ts.net.",
+   "OS": "linux",
+   "UserID": 4049164187024120,
+   "TailscaleIPs": [
+    "100.109.86.6",
+    "fd7a:115c:a1e0::a538:5607"
+   ],
+   "AllowedIPs": [
+    "100.109.86.6/32",
+    "fd7a:115c:a1e0::a538:5607/128"
+   ],
+   "Addrs": null,
+   "CurAddr": "192.168.1.69:41641",
+   "Relay": "sea",
+   "PeerRelay": "",
+   "RxBytes": 435808,
+   "TxBytes": 158144,
+   "Created": "2026-06-24T02:45:54.979736367Z",
+   "LastWrite": "2026-09-14T13:08:30.852670277-06:00",
+   "LastSeen": "0001-01-01T00:00:00Z",
+   "LastHandshake": "2026-09-14T13:06:40.559929836-06:00",
+   "Online": true,
+   "ExitNode": false,
+   "ExitNodeOption": false,
+   "Active": true,
+   "PeerAPIURL": [
+    "http://100.109.86.6:56966",
+    "http://[fd7a:115c:a1e0::a538:5607]:33355"
+   ],
+   "TaildropTarget": 1,
+   "NoFileSharingReason": "",
+   "sshHostKeys": [
+    "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCwLfFvzTlGKO4L2r0swKORQ2OzWE402qd4oEzLjWVVKVJpAZjcUPVkjs1wuWJk9wbOkK3i41fXeWqcPb1JVO8AiGu/BVUznZGCBNWx1zpx+k8A2AvlmGJHj37CgfqrvVqrXyv7EiJykDAVlkuJ78ydOq2JAfP7cp2VcedwmOBXPUOz2WzWbfPP77G3fBT6ogvzpmlsORROw3PQbIYhra38iGJqSe68imvD01i26cjmv2CdAPwknXQrjBQFIGxhmOnW4/OPMRNrsJGKWLPFrazr43/S0oG6kl3O5vPXG3Mez/cd5Fw034DD96IkNj/AjElg5y+MrRWMUYMfhYzqbAKnXlCdGgY/JkiAp07MjtSpy8y6A2AkTlUF1EZSBKbnRyXHO1MqBA/fL6Bc/QoN6rNILCW1yO2QuAPHBraof01KL0wAyapKZsXtI8uGCDY6fiTyhPOPtf5RHpEoVp/ZbxnEI3NH1sZwc4wiid2v85l9xtVIyrbP8acmlBP7uObmp0M=",
+    "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBOao0xBvg3OZJpeF/QW2pjVp+AdMhYM9AlJ5iJygHTGFKBlTCe1qDBpOuGQLco+Kcer9PalGYW2X2bDnXwq6u9c=",
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGuG0Rb84VrXkgxJy5DFDmaBoBCGiwbNERfHUBV2E78F"
+   ],
+   "InNetworkMap": true,
+   "InMagicSock": true,
+   "InEngine": true
+  },
+  "nodekey:0000000000000000000000000000000000000000000000000000000000000005": {
+   "ID": "nZFfV9eiLB11CNTRL",
+   "NodeID": 1324167714082148,
+   "PublicKey": "nodekey:0000000000000000000000000000000000000000000000000000000000000005",
+   "HostName": "NoteAir4C",
+   "DNSName": "noteair4c.tailcaa06c.ts.net.",
+   "OS": "android",
+   "UserID": 4049164187024120,
+   "TailscaleIPs": [
+    "100.98.27.34",
+    "fd7a:115c:a1e0::4938:1b23"
+   ],
+   "AllowedIPs": [
+    "100.98.27.34/32",
+    "fd7a:115c:a1e0::4938:1b23/128"
+   ],
+   "Addrs": null,
+   "CurAddr": "",
+   "Relay": "sea",
+   "PeerRelay": "",
+   "RxBytes": 0,
+   "TxBytes": 0,
+   "Created": "2026-07-26T01:02:50.88890705Z",
+   "LastWrite": "0001-01-01T00:00:00Z",
+   "LastSeen": "2026-08-13T23:20:04.1Z",
+   "LastHandshake": "0001-01-01T00:00:00Z",
+   "Online": false,
+   "ExitNode": false,
+   "ExitNodeOption": false,
+   "Active": false,
+   "PeerAPIURL": [
+    "http://100.98.27.34:1",
+    "http://[fd7a:115c:a1e0::4938:1b23]:1"
+   ],
+   "TaildropTarget": 5,
+   "NoFileSharingReason": "",
+   "InNetworkMap": true,
+   "InMagicSock": true,
+   "InEngine": false,
+   "KeyExpiry": "2027-01-22T01:02:50Z"
+  },
+  "nodekey:0000000000000000000000000000000000000000000000000000000000000006": {
+   "ID": "ngEanPLRjC21CNTRL",
+   "NodeID": 8930014350834693,
+   "PublicKey": "nodekey:0000000000000000000000000000000000000000000000000000000000000006",
+   "HostName": "Pixel Tablet",
+   "DNSName": "pixel-tablet.tailcaa06c.ts.net.",
+   "OS": "android",
+   "UserID": 4049164187024120,
+   "TailscaleIPs": [
+    "100.90.23.6",
+    "fd7a:115c:a1e0::9b38:1707"
+   ],
+   "AllowedIPs": [
+    "100.90.23.6/32",
+    "fd7a:115c:a1e0::9b38:1707/128"
+   ],
+   "Addrs": null,
+   "CurAddr": "",
+   "Relay": "sea",
+   "PeerRelay": "",
+   "RxBytes": 0,
+   "TxBytes": 0,
+   "Created": "2026-08-24T20:03:49.242567786Z",
+   "LastWrite": "0001-01-01T00:00:00Z",
+   "LastSeen": "0001-01-01T00:00:00Z",
+   "LastHandshake": "0001-01-01T00:00:00Z",
+   "Online": true,
+   "ExitNode": false,
+   "ExitNodeOption": false,
+   "Active": false,
+   "PeerAPIURL": [
+    "http://100.90.23.6:1",
+    "http://[fd7a:115c:a1e0::9b38:1707]:1"
+   ],
+   "TaildropTarget": 1,
+   "NoFileSharingReason": "",
+   "InNetworkMap": true,
+   "InMagicSock": true,
+   "InEngine": false
+  }
+ },
+ "User": {
+  "4049164187024120": {
+   "ID": 4049164187024120,
+   "LoginName": "alex@example.com",
+   "DisplayName": "Alex Example",
+   "ProfilePicURL": ""
+  }
+ },
+ "ClientVersion": null
+}

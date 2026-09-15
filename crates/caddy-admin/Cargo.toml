@@ -1,0 +1,17 @@
+[package]
+name = "caddy-admin"
+description = "Client for Caddy's native JSON admin API, reached over a tailnet"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+tokio.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+hyper.workspace = true
+hyper-util.workspace = true
+http-body-util.workspace = true
+thiserror.workspace = true
+tracing.workspace = true

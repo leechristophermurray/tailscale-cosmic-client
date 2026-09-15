@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,200..900;1,7..72,200..900&amp;family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={"darkMode":"class","theme":{"extend":{"colors":{"inverse-on-surface":"#f5f0e8","surface-tint":"#4a7c59","error":"#b83230","primary-fixed":"#c8e8d0","on-tertiary":"#ffffff","on-surface":"#2e3230","on-secondary":"#ffffff","surface-bright":"#faf6f0","error-container":"#ffdad8","outline-variant":"#c4c8bc","secondary-fixed-dim":"#d4ccbf","on-primary":"#ffffff","tertiary-fixed":"#f8e0a8","tertiary":"#705c30","on-primary-container":"#d8f0de","secondary":"#6b6358","primary-fixed-dim":"#8ecf9e","on-primary-fixed":"#002110","secondary-fixed":"#f0e8db","on-tertiary-fixed-variant":"#554020","on-tertiary-container":"#554020","surface-container-low":"#f5f1ea","outline":"#74796e","surface-container":"#f0ece4","on-error-container":"#690005","on-tertiary-fixed":"#221a05","on-secondary-fixed":"#1e1a13","surface-container-high":"#eae6de","on-primary-fixed-variant":"#2a6038","tertiary-container":"#c4a66a","primary-container":"#78a886","on-surface-variant":"#4a4e4a","on-secondary-fixed-variant":"#4a4538","primary":"#4a7c59","surface-dim":"#dbd7cf","inverse-surface":"#2e3230","inverse-primary":"#8ecf9e","on-error":"#ffffff","surface-container-highest":"#e4e0d8","secondary-container":"#f0e8db","background":"#faf6f0","tertiary-fixed-dim":"#dcc48e","on-background":"#2e3230","surface-variant":"#e4e0d8","surface-container-lowest":"#ffffff","surface":"#faf6f0","on-secondary-container":"#5e5548"},"borderRadius":{"DEFAULT":"0.5rem","lg":"1rem","xl":"1.5rem","full":"9999px"},"spacing":{},"fontFamily":{"headline":["Literata"],"display":["Literata"],"body":["Nunito Sans"],"label":["Nunito Sans"]},"fontSize":{}}}}</script></head><body class="bg-surface font-body text-on-surface antialiased"><header class="fixed top-0 left-0 right-0 h-10 z-50 bg-surface-container-high/90 backdrop-blur-md shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-10 w-full px-4 flex items-center justify-between text-xs"><div class="flex items-center gap-3"><span class="font-bold tracking-wide text-on-surface flex items-center gap-1.5"><span class="material-symbols-outlined text-[16px] text-primary">grid_view</span>Applications</span><div class="flex items-center gap-1 bg-surface-container-lowest px-2 py-0.5 rounded-full text-on-surface-variant"><span class="w-1.5 h-1.5 rounded-full bg-primary"></span><span>Workspace 1</span></div></div><div class="flex items-center gap-1 font-semibold text-on-surface-variant"><span>Wed Oct 23</span><span class="font-normal opacity-40">•</span><span>14:42</span></div><div class="flex items-center gap-3"><div class="flex items-center gap-1.5 bg-primary-container px-2 py-0.5 rounded-full text-on-primary-container text-[11px] font-medium"><span class="material-symbols-outlined text-[14px]">vpn_key</span><span>orca-cat.ts.net</span></div><div class="flex items-center gap-2 text-on-surface-variant"><span class="material-symbols-outlined text-[16px]">wifi</span><span class="material-symbols-outlined text-[16px]">volume_up</span><span class="material-symbols-outlined text-[16px]">battery_charging_full</span></div><div class="w-6 h-6 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[14px]">person</span></div></div></div></header><div class="pt-10 flex flex-col min-h-screen"><div class="p-4 flex-1 flex flex-col"><div class="rounded-xl bg-surface-container shadow-[0_4px_20px_rgba(46,50,48,0.06)] overflow-hidden flex-1 flex flex-col"><div class="h-12 bg-surface-container-high px-4 flex items-center justify-between select-none"><div class="flex items-center gap-3"><div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-error inline-block"></span><span class="w-3 h-3 rounded-full bg-tertiary inline-block"></span><span class="w-3 h-3 rounded-full bg-primary inline-block"></span></div><span class="font-headline font-semibold text-sm text-on-surface ml-2 flex items-center gap-1.5"><span class="material-symbols-outlined text-[18px] text-primary">lan</span>cosmic-tailscale</span></div><div class="flex items-center gap-2 bg-surface-container-low px-3 py-1 rounded-lg w-72"><span class="material-symbols-outlined text-[16px] text-on-surface-variant">search</span><input class="bg-transparent border-none outline-none text-xs w-full text-on-surface placeholder:text-on-surface-variant font-body" placeholder="Filter devices, IPs, or tags..." type="text"/></div><div class="flex items-center gap-2"><button class="p-1.5 rounded hover:bg-surface-container-highest hover:text-on-surface text-on-surface-variant transition-colors"><span class="material-symbols-outlined text-[18px]">sync</span></button><button class="p-1.5 rounded hover:bg-surface-container-highest hover:text-on-surface text-on-surface-variant transition-colors"><span class="material-symbols-outlined text-[18px]">settings</span></button></div></div><div class="flex-1 flex"><aside class="w-64 bg-surface-container-low p-3 flex flex-col justify-between shrink-0"><div class="space-y-4"><div class="px-2"><div class="text-[11px] font-bold uppercase tracking-wider text-on-surface-variant mb-1">Tailnet</div><div class="text-sm font-semibold text-on-surface">orca-cat.ts.net</div><div class="flex items-center gap-1.5 text-xs text-primary mt-1"><span class="w-2 h-2 rounded-full bg-primary"></span>Connected (100.84.12.9)</div></div><nav class="space-y-1" data-active-classes="bg-primary-container text-on-primary-container font-semibold"><a aria-current="page" class="flex items-center gap-2.5 px-3 py-2 rounded-lg transition-colors bg-primary-container text-on-primary-container font-semibold" data-path="devices" href="#"><span class="material-symbols-outlined text-[18px]">devices</span>Machines</a><a class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="exit-nodes" href="#"><span class="material-symbols-outlined text-[18px]">alt_route</span>Exit Nodes</a><a class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="services" href="#"><span class="material-symbols-outlined text-[18px]">dns</span>Services &amp; DNS</a><a class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="access-controls" href="#"><span class="material-symbols-outlined text-[18px]">shield</span>Access Controls</a><a class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="settings" href="#"><span class="material-symbols-outlined text-[18px]">tune</span>Preferences</a></nav></div><div class="bg-surface-container p-3 rounded-lg"><div class="flex items-center justify-between text-xs text-on-surface-variant mb-1"><span>Key Expiry</span><span class="font-medium text-tertiary">84 days</span></div><div class="w-full bg-surface-container-high h-1.5 rounded-full overflow-hidden"><div class="bg-primary h-full w-3/4 rounded-full"></div></div></div></aside><main class="flex-1 bg-surface-container-lowest p-6 overflow-y-auto relative"><div class="flex flex-col w-full space-y-6 select-none">
+<!-- Interactive Applet Popover Dock & Quick Status Bar -->
+<div class="relative w-full">
+<!-- Quick Applet Top Dock (COSMIC panel flyout preview) -->
+<div class="w-full bg-surface-container-low rounded-xl p-4 shadow-sm">
+<div class="flex flex-wrap items-center justify-between gap-4">
+<!-- Identity & Connection status -->
+<div class="flex items-center gap-3.5">
+<div class="relative">
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center font-bold text-on-surface text-sm">
+              AC
+            </div>
+<span class="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-primary ring-2 ring-surface-container-low"></span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="font-headline font-semibold text-on-surface text-base">orca-cat.ts.net</span>
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary text-on-primary">Connected</span>
+<span class="text-xs px-2 py-0.5 rounded-md bg-surface-container text-on-surface-variant font-mono">100.84.12.9</span>
+</div>
+<span class="text-xs text-on-surface-variant">alex@orca-cat.ts.net • COSMIC Applet v1.1.4</span>
+</div>
+</div>
+<!-- Exit Node Fast Switcher & Toggle -->
+<div class="flex items-center gap-3">
+<div class="flex items-center gap-2 bg-surface-container px-3 py-1.5 rounded-lg">
+<span class="material-symbols-outlined text-[18px] text-tertiary">alt_route</span>
+<span class="text-xs text-on-surface-variant">Exit Node:</span>
+<select class="bg-transparent text-xs font-semibold text-on-surface focus:outline-none cursor-pointer">
+<option value="none">None (Direct Mesh)</option>
+<option value="aws">aws-prod-gateway (Frankfurt)</option>
+<option value="mullvad-us">Mullvad (US - NYC)</option>
+<option value="mullvad-de">Mullvad (DE - FRA)</option>
+</select>
+</div>
+<!-- Main Tailscale Daemon Toggle -->
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" id="tailscale-daemon-toggle" type="checkbox"/>
+<div class="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-on-primary after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-surface-container-lowest after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+<!-- Quick Dropdown Toggle for Flyout -->
+<button class="flex items-center gap-1 bg-surface-container hover:bg-surface-container-high text-on-surface px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors" id="toggle-flyout-btn">
+<span class="material-symbols-outlined text-[16px]">tune</span>
+<span>Quick Applet</span>
+<span class="material-symbols-outlined text-[14px]">expand_more</span>
+</button>
+</div>
+</div>
+<!-- Expandable Popover Flyout (libcosmic popover aesthetic) -->
+<div class="mt-4 pt-4 bg-surface-container-lowest rounded-xl p-4 shadow-md space-y-4" id="cosmic-flyout">
+<div class="flex items-center justify-between pb-2">
+<div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px] text-primary">nearby</span>
+<span>Recent Peers &amp; Transfer Targets</span>
+</div>
+<div class="flex items-center gap-2">
+<button class="px-2.5 py-1 text-xs rounded bg-surface-container text-on-surface hover:bg-surface-container-high transition-colors flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[14px] text-tertiary">snooze</span>
+<span>Suspend for 1h</span>
+</button>
+<button class="px-2.5 py-1 text-xs rounded bg-surface-container text-on-surface hover:bg-surface-container-high transition-colors flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[14px] text-primary">admin_panel_settings</span>
+<span>Admin Console</span>
+</button>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+<!-- Quick Peer 1 -->
+<div class="bg-surface-container p-3 rounded-lg flex items-center justify-between">
+<div class="flex items-center gap-2.5 truncate">
+<span class="w-2 h-2 rounded-full bg-primary shrink-0"></span>
+<div class="truncate">
+<p class="text-xs font-semibold text-on-surface truncate">framework-laptop</p>
+<p class="text-[11px] font-mono text-on-surface-variant">100.90.11.2</p>
+</div>
+</div>
+<button class="p-1 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high" onclick="navigator.clipboard.writeText('100.90.11.2')" title="Copy IP">
+<span class="material-symbols-outlined text-[15px]">content_copy</span>
+</button>
+</div>
+<!-- Quick Peer 2 -->
+<div class="bg-surface-container p-3 rounded-lg flex items-center justify-between">
+<div class="flex items-center gap-2.5 truncate">
+<span class="w-2 h-2 rounded-full bg-primary shrink-0"></span>
+<div class="truncate">
+<p class="text-xs font-semibold text-on-surface truncate">homelab-caddy-srv</p>
+<p class="text-[11px] font-mono text-on-surface-variant">100.115.8.91</p>
+</div>
+</div>
+<button class="p-1 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high" onclick="navigator.clipboard.writeText('100.115.8.91')" title="Copy IP">
+<span class="material-symbols-outlined text-[15px]">content_copy</span>
+</button>
+</div>
+<!-- Quick Peer 3: Taildrop target -->
+<div class="bg-primary-fixed text-on-primary-fixed p-3 rounded-lg flex items-center justify-between cursor-pointer hover:bg-primary-fixed-dim transition-colors">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">upload_file</span>
+<div>
+<p class="text-xs font-bold">Taildrop Drop Zone</p>
+<p class="text-[11px] opacity-80">Drag &amp; drop files to share</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Dual Pane Main Interface (libcosmic Rust style) -->
+<div class="grid grid-cols-12 gap-6 items-start">
+<!-- Left Navigation Panel (Machine & Peer Navigator) -->
+<div class="col-span-12 lg:col-span-4 space-y-4">
+<!-- Search Machine filter with shortcut chip -->
+<div class="relative bg-surface-container-low rounded-xl p-1.5 flex items-center">
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant ml-2.5">filter_alt</span>
+<input class="w-full bg-transparent px-2.5 py-1 text-xs text-on-surface placeholder:text-on-surface-variant focus:outline-none" id="machine-filter" placeholder="Filter machines (14)..." type="text"/>
+<kbd class="hidden sm:inline-block px-1.5 py-0.5 text-[10px] font-mono bg-surface-container-high text-on-surface-variant rounded mr-1.5 shadow-sm">Ctrl+K</kbd>
+</div>
+<!-- Device Groups -->
+<div class="space-y-4">
+<!-- Group: Pinned / My Devices -->
+<div class="space-y-1.5">
+<div class="px-2 flex items-center justify-between">
+<span class="text-[11px] font-bold tracking-wider uppercase text-on-surface-variant">Pinned / My Devices</span>
+<span class="text-[11px] font-semibold text-primary">4</span>
+</div>
+<!-- Machine 1: desktop-office (Selected) -->
+<div class="bg-primary-container text-on-primary-container rounded-xl p-3 shadow-sm cursor-pointer transition-all">
+<div class="flex items-start justify-between gap-2">
+<div class="flex items-center gap-2.5">
+<div class="p-1.5 rounded-lg bg-surface-container-lowest text-primary">
+<span class="material-symbols-outlined text-[18px]">desktop_windows</span>
+</div>
+<div>
+<div class="flex items-center gap-1.5">
+<span class="text-xs font-bold font-headline">desktop-office</span>
+<span class="text-[10px] px-1.5 py-0.2 bg-primary text-on-primary rounded-full font-medium">This Machine</span>
+</div>
+<p class="text-[11px] text-on-surface-variant font-mono">100.84.12.44</p>
+</div>
+</div>
+<div class="text-right">
+<span class="inline-flex items-center gap-1 text-[11px] font-medium text-primary">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span> 14ms
+                </span>
+<p class="text-[10px] text-on-surface-variant">Pop!_OS 24.04</p>
+</div>
+</div>
+</div>
+<!-- Machine 2: framework-laptop -->
+<div class="bg-surface-container-low hover:bg-surface-container text-on-surface rounded-xl p-3 cursor-pointer transition-colors">
+<div class="flex items-start justify-between gap-2">
+<div class="flex items-center gap-2.5">
+<div class="p-1.5 rounded-lg bg-surface-container text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">laptop_mac</span>
+</div>
+<div>
+<div class="flex items-center gap-1.5">
+<span class="text-xs font-semibold">framework-laptop</span>
+</div>
+<p class="text-[11px] text-on-surface-variant font-mono">100.90.11.2</p>
+</div>
+</div>
+<div class="text-right">
+<span class="inline-flex items-center gap-1 text-[11px] text-primary font-medium">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span> Online
+                </span>
+<p class="text-[10px] text-on-surface-variant">Arch Linux</p>
+</div>
+</div>
+</div>
+<!-- Machine 3: homelab-caddy-srv -->
+<div class="bg-surface-container-low hover:bg-surface-container text-on-surface rounded-xl p-3 cursor-pointer transition-colors">
+<div class="flex items-start justify-between gap-2">
+<div class="flex items-center gap-2.5">
+<div class="p-1.5 rounded-lg bg-surface-container text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">dns</span>
+</div>
+<div>
+<div class="flex items-center gap-1.5">
+<span class="text-xs font-semibold">homelab-caddy-srv</span>
+<span class="text-[9px] px-1.5 py-0.2 bg-tertiary-fixed text-on-tertiary-fixed rounded font-semibold">Caddy</span>
+</div>
+<p class="text-[11px] text-on-surface-variant font-mono">100.115.8.91</p>
+</div>
+</div>
+<div class="text-right">
+<span class="inline-flex items-center gap-1 text-[11px] text-primary font-medium">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span> Online
+                </span>
+<p class="text-[10px] text-on-surface-variant">Debian 12</p>
+</div>
+</div>
+</div>
+<!-- Machine 4: phone-pixel9 -->
+<div class="bg-surface-container-low hover:bg-surface-container text-on-surface rounded-xl p-3 cursor-pointer transition-colors">
+<div class="flex items-start justify-between gap-2">
+<div class="flex items-center gap-2.5">
+<div class="p-1.5 rounded-lg bg-surface-container text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">smartphone</span>
+</div>
+<div>
+<span class="text-xs font-semibold">phone-pixel9</span>
+<p class="text-[11px] text-on-surface-variant font-mono">100.64.20.10</p>
+</div>
+</div>
+<div class="text-right">
+<span class="inline-flex items-center gap-1 text-[11px] text-on-surface-variant">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span> 5m ago
+                </span>
+<p class="text-[10px] text-on-surface-variant">Android 15</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Group: Shared with Me -->
+<div class="space-y-1.5 pt-2">
+<div class="px-2 flex items-center justify-between">
+<span class="text-[11px] font-bold tracking-wider uppercase text-on-surface-variant">Shared with Me</span>
+<span class="text-[11px] font-semibold text-on-surface-variant">2</span>
+</div>
+<!-- Machine 5: storage-truenas -->
+<div class="bg-surface-container-low hover:bg-surface-container text-on-surface rounded-xl p-3 cursor-pointer transition-colors">
+<div class="flex items-start justify-between gap-2">
+<div class="flex items-center gap-2.5">
+<div class="p-1.5 rounded-lg bg-surface-container text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">folder_special</span>
+</div>
+<div>
+<span class="text-xs font-semibold">storage-truenas</span>
+<p class="text-[11px] text-on-surface-variant font-mono">100.77.4.15</p>
+</div>
+</div>
+<div class="text-right">
+<span class="inline-flex items-center gap-1 text-[11px] text-primary font-medium">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span> Online
+                </span>
+<p class="text-[10px] text-on-surface-variant">FreeBSD</p>
+</div>
+</div>
+</div>
+<!-- Machine 6: aws-prod-gateway -->
+<div class="bg-surface-container-low hover:bg-surface-container text-on-surface rounded-xl p-3 cursor-pointer transition-colors">
+<div class="flex items-start justify-between gap-2">
+<div class="flex items-center gap-2.5">
+<div class="p-1.5 rounded-lg bg-surface-container text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">cloud</span>
+</div>
+<div>
+<div class="flex items-center gap-1.5">
+<span class="text-xs font-semibold">aws-prod-gateway</span>
+<span class="text-[9px] px-1.5 py-0.2 bg-primary-container text-on-primary-container rounded font-bold">Exit</span>
+</div>
+<p class="text-[11px] text-on-surface-variant font-mono">100.120.30.1</p>
+</div>
+</div>
+<div class="text-right">
+<span class="inline-flex items-center gap-1 text-[11px] text-primary font-medium">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span> Exit Active
+                </span>
+<p class="text-[10px] text-on-surface-variant">Ubuntu 24.04</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Local Daemon Socket Diagnostics Card -->
+<div class="bg-surface-container-low rounded-xl p-3 space-y-2 text-xs">
+<div class="flex items-center justify-between text-on-surface-variant">
+<span class="flex items-center gap-1 font-semibold">
+<span class="material-symbols-outlined text-[15px] text-primary">terminal</span>
+            LocalAPI Daemon
+          </span>
+<span class="font-mono text-[10px] text-primary">&lt;0.4ms IPC</span>
+</div>
+<div class="p-2 bg-surface-container rounded-lg font-mono text-[10px] text-on-surface-variant truncate">
+          unix:///var/run/tailscale/tailscaled.sock
+        </div>
+</div>
+</div>
+<!-- Right Pane: Machine Detail & Caddy Proxy Manager -->
+<div class="col-span-12 lg:col-span-8 space-y-6">
+<!-- 1. Machine Header & Action Bar -->
+<div class="bg-surface-container-low rounded-xl p-5 shadow-sm space-y-5">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+<div>
+<div class="flex items-center gap-3">
+<h2 class="font-headline text-2xl font-bold text-on-surface">desktop-office</h2>
+<span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-fixed text-on-primary-fixed flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                Pop!_OS 24.04 COSMIC
+              </span>
+</div>
+<!-- MagicDNS & IPv4 badge strip -->
+<div class="flex flex-wrap items-center gap-2 mt-2">
+<div class="flex items-center gap-1 bg-surface-container px-2.5 py-1 rounded-md text-xs font-mono text-on-surface">
+<span>100.84.12.44</span>
+<button class="hover:text-primary transition-colors" onclick="navigator.clipboard.writeText('100.84.12.44')" title="Copy IP">
+<span class="material-symbols-outlined text-[14px]">content_copy</span>
+</button>
+</div>
+<div class="flex items-center gap-1 bg-surface-container px-2.5 py-1 rounded-md text-xs font-mono text-on-surface-variant">
+<span>desktop-office.orca-cat.ts.net</span>
+<button class="hover:text-primary transition-colors" onclick="navigator.clipboard.writeText('desktop-office.orca-cat.ts.net')" title="Copy MagicDNS">
+<span class="material-symbols-outlined text-[14px]">link</span>
+</button>
+</div>
+</div>
+</div>
+<!-- DERP Latency Gauge Chart (libcosmic minimal SVG) -->
+<div class="flex items-center gap-3 bg-surface-container px-3.5 py-2 rounded-xl self-start sm:self-auto">
+<svg class="w-10 h-10 -rotate-90" viewbox="0 0 36 36">
+<path class="text-surface-container-high" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="3.5"></path>
+<path class="text-primary" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-dasharray="88, 100" stroke-linecap="round" stroke-width="3.5"></path>
+</svg>
+<div>
+<p class="text-[11px] uppercase tracking-wider text-on-surface-variant font-bold">Mesh Quality</p>
+<p class="text-sm font-bold text-on-surface">14ms Direct</p>
+</div>
+</div>
+</div>
+<!-- Action Button Strip (iced / libcosmic styled rounded buttons) -->
+<div class="flex flex-wrap items-center gap-2 pt-1">
+<!-- Primary SSH Action -->
+<button class="flex items-center gap-2 px-3.5 py-2 bg-primary hover:bg-surface-tint text-on-primary rounded-xl text-xs font-bold shadow-sm transition-all">
+<span class="material-symbols-outlined text-[17px]">terminal</span>
+<span>SSH Terminal (cosmic-term)</span>
+</button>
+<!-- DERP Check -->
+<button class="flex items-center gap-1.5 px-3 py-2 bg-surface-container hover:bg-surface-container-high text-on-surface rounded-xl text-xs font-semibold transition-colors">
+<span class="material-symbols-outlined text-[16px] text-tertiary">network_check</span>
+<span>Ping / DERP</span>
+</button>
+<!-- Taildrop -->
+<button class="flex items-center gap-1.5 px-3 py-2 bg-surface-container hover:bg-surface-container-high text-on-surface rounded-xl text-xs font-semibold transition-colors">
+<span class="material-symbols-outlined text-[16px] text-primary">send</span>
+<span>Send File (Taildrop)</span>
+</button>
+<!-- Caddy Special Badge action -->
+<button class="flex items-center gap-1.5 px-3 py-2 bg-tertiary-fixed hover:bg-tertiary-fixed-dim text-on-tertiary-fixed rounded-xl text-xs font-semibold transition-colors">
+<span class="material-symbols-outlined text-[16px]">sync_alt</span>
+<span>Configure Caddy</span>
+</button>
+<!-- Context overflow -->
+<button class="p-2 bg-surface-container hover:bg-surface-container-high text-on-surface rounded-xl transition-colors ml-auto">
+<span class="material-symbols-outlined text-[18px]">more_horiz</span>
+</button>
+</div>
+</div>
+<!-- 2. System & Connection Grid Details -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+<!-- Kernel & Environment -->
+<div class="bg-surface-container-low rounded-xl p-4 space-y-1">
+<span class="text-[11px] font-bold uppercase tracking-wider text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px] text-primary">memory</span>
+            OS &amp; Platform
+          </span>
+<p class="text-xs font-semibold text-on-surface pt-1">Linux 6.9.3-system76</p>
+<p class="text-[11px] text-on-surface-variant">COSMIC Desktop Epoch 1 (libcosmic 0.1.0)</p>
+</div>
+<!-- WireGuard Connection Specs -->
+<div class="bg-surface-container-low rounded-xl p-4 space-y-1">
+<span class="text-[11px] font-bold uppercase tracking-wider text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px] text-primary">wifi_channel</span>
+            Peer Endpoint
+          </span>
+<p class="text-xs font-mono font-semibold text-on-surface pt-1">198.51.100.24:41641</p>
+<p class="text-[11px] text-on-surface-variant">Direct WireGuard (p2p via disco punch)</p>
+</div>
+<!-- Key Life & Expiry -->
+<div class="bg-surface-container-low rounded-xl p-4 space-y-1 sm:col-span-2 lg:col-span-1">
+<div class="flex items-center justify-between">
+<span class="text-[11px] font-bold uppercase tracking-wider text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px] text-tertiary">vpn_key</span>
+              Machine Key
+            </span>
+<button class="text-[11px] text-primary font-bold hover:underline">Renew</button>
+</div>
+<p class="text-xs font-semibold text-on-surface pt-1">Expires in 42 days</p>
+<p class="text-[11px] text-on-surface-variant">Key valid until Oct 28, 2025</p>
+</div>
+</div>
+<!-- Capabilities strip -->
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+<div class="bg-surface-container-low rounded-xl p-3.5 flex items-center gap-3">
+<div class="p-2 rounded-lg bg-surface-container text-primary">
+<span class="material-symbols-outlined text-[20px]">terminal</span>
+</div>
+<div>
+<div class="flex items-center gap-1.5">
+<span class="text-xs font-bold text-on-surface">Tailscale SSH Enabled</span>
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+</div>
+<p class="text-[11px] text-on-surface-variant">Session recording active via tailnet ACLs</p>
+</div>
+</div>
+<div class="bg-surface-container-low rounded-xl p-3.5 flex items-center gap-3">
+<div class="p-2 rounded-lg bg-surface-container text-primary">
+<span class="material-symbols-outlined text-[20px]">traffic</span>
+</div>
+<div>
+<div class="flex items-center gap-1.5">
+<span class="text-xs font-bold text-on-surface">Exit Node Permitted</span>
+<span class="text-[10px] px-1 rounded bg-surface-container font-mono text-on-surface-variant">0.0.0.0/0</span>
+</div>
+<p class="text-[11px] text-on-surface-variant">Routes all client internet traffic when targeted</p>
+</div>
+</div>
+</div>
+<!-- 3. Caddy Reverse Proxy Extension Section -->
+<div class="bg-surface-container-low rounded-xl p-5 space-y-4 shadow-sm">
+<!-- Caddy Section Header -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3">
+<div class="flex items-center gap-3">
+<div class="p-2 rounded-xl bg-surface-container text-tertiary">
+<span class="material-symbols-outlined text-[22px]">swap_calls</span>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<h3 class="font-headline font-bold text-base text-on-surface">Caddy Server Manager</h3>
+<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-primary-fixed text-on-primary-fixed flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+                  Synced &amp; Running
+                </span>
+</div>
+<p class="text-xs text-on-surface-variant">Admin API on <span class="font-mono">:2019</span> via local Tailscale UNIX socket tunnel</p>
+</div>
+</div>
+<!-- HTTPS Auto Badge -->
+<div class="flex items-center gap-1.5 bg-surface-container px-3 py-1.5 rounded-lg text-xs self-start sm:self-auto">
+<span class="material-symbols-outlined text-[16px] text-primary">lock</span>
+<span class="text-on-surface font-medium">Automatic HTTPS (*.ts.net)</span>
+</div>
+</div>
+<!-- Routes Table (libcosmic list view) -->
+<div class="space-y-2">
+<span class="text-[11px] font-bold uppercase tracking-wider text-on-surface-variant">Forwarded Routes &amp; Virtual Hosts</span>
+<!-- Route 1 -->
+<div class="bg-surface-container rounded-xl p-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3 hover:bg-surface-container-high transition-colors">
+<div class="space-y-1">
+<div class="flex items-center gap-2">
+<span class="font-mono text-xs font-bold text-on-surface">desktop-office.orca-cat.ts.net:8080</span>
+<span class="text-[10px] px-1.5 py-0.5 rounded bg-surface-container-lowest text-on-surface-variant font-medium">Tailnet Only</span>
+</div>
+<div class="flex items-center gap-1.5 text-xs text-on-surface-variant">
+<span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+<span class="font-mono">localhost:8080</span>
+<span class="opacity-40">•</span>
+<span>Nextcloud Hub Enterprise</span>
+</div>
+</div>
+<div class="flex items-center gap-2 self-end md:self-auto">
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-primary text-on-primary">HTTPS Active</span>
+<button class="p-1.5 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container-lowest transition-colors" title="Settings">
+<span class="material-symbols-outlined text-[16px]">edit</span>
+</button>
+</div>
+</div>
+<!-- Route 2: Grafana Public Funnel -->
+<div class="bg-surface-container rounded-xl p-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3 hover:bg-surface-container-high transition-colors">
+<div class="space-y-1">
+<div class="flex items-center gap-2">
+<span class="font-mono text-xs font-bold text-on-surface">grafana.orca-cat.ts.net:443</span>
+<span class="text-[10px] px-1.5 py-0.5 rounded bg-tertiary-fixed text-on-tertiary-fixed font-bold">Public Funnel Active</span>
+</div>
+<div class="flex items-center gap-1.5 text-xs text-on-surface-variant">
+<span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+<span class="font-mono">localhost:3000</span>
+<span class="opacity-40">•</span>
+<span>Grafana Observability Stack</span>
+</div>
+</div>
+<div class="flex items-center gap-2 self-end md:self-auto">
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-primary text-on-primary">Valid Cert</span>
+<button class="p-1.5 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container-lowest transition-colors" title="Settings">
+<span class="material-symbols-outlined text-[16px]">edit</span>
+</button>
+</div>
+</div>
+<!-- Route 3: UNIX socket proxy -->
+<div class="bg-surface-container rounded-xl p-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3 hover:bg-surface-container-high transition-colors">
+<div class="space-y-1">
+<div class="flex items-center gap-2">
+<span class="font-mono text-xs font-bold text-on-surface">api.orca-cat.ts.net</span>
+<span class="text-[10px] px-1.5 py-0.5 rounded bg-surface-container-lowest text-on-surface-variant font-medium">Tailnet Only</span>
+</div>
+<div class="flex items-center gap-1.5 text-xs text-on-surface-variant">
+<span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+<span class="font-mono">unix:/run/app.sock</span>
+<span class="opacity-40">•</span>
+<span>FastAPI Service</span>
+</div>
+</div>
+<div class="flex items-center gap-2 self-end md:self-auto">
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-primary text-on-primary">HTTPS Active</span>
+<button class="p-1.5 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container-lowest transition-colors" title="Settings">
+<span class="material-symbols-outlined text-[16px]">edit</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Caddy Action Footbar -->
+<div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+<button class="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-on-primary rounded-lg text-xs font-bold hover:bg-surface-tint transition-colors">
+<span class="material-symbols-outlined text-[16px]">add</span>
+<span>Add Reverse Proxy Route</span>
+</button>
+<div class="flex items-center gap-2">
+<button class="flex items-center gap-1.5 px-3 py-1.5 bg-surface-container text-on-surface rounded-lg text-xs font-medium hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-[15px] text-tertiary">folder_zip</span>
+<span>Push /var/www via Taildrop</span>
+</button>
+<button class="flex items-center gap-1.5 px-3 py-1.5 bg-surface-container text-on-surface rounded-lg text-xs font-medium hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-[15px]">list_alt</span>
+<span>View Caddy Logs</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script>
+  (function() {
+    const toggleBtn = document.getElementById('toggle-flyout-btn');
+    const flyout = document.getElementById('cosmic-flyout');
+    if (toggleBtn && flyout) {
+      toggleBtn.addEventListener('click', function() {
+        flyout.classList.toggle('hidden');
+      });
+    }
+
+    const filterInput = document.getElementById('machine-filter');
+    if (filterInput) {
+      document.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+          e.preventDefault();
+          filterInput.focus();
+        }
+      });
+    }
+  })();
+</script></main></div><footer class="h-8 bg-surface-container-high px-4 flex items-center justify-between text-xs text-on-surface-variant select-none"><div class="flex items-center gap-4"><span>Tailscale 1.58.2</span><span>Backend: running</span><span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-primary"></span>DERP: fra (Frankfurt)</span></div><div class="flex items-center gap-3 font-mono text-[11px]"><span>In: 1.2 MB/s</span><span>Out: 480 KB/s</span></div></footer></div></div></div></body></html>

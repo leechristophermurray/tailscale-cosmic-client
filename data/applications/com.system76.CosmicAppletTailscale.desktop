@@ -1,0 +1,15 @@
+[Desktop Entry]
+Type=Application
+Name=Tailscale
+Comment=Toggle your tailnet and switch exit nodes from the panel
+Exec=cosmic-applet-tailscale
+Icon=com.system76.CosmicTailscale-symbolic
+Terminal=false
+Categories=COSMIC;
+Keywords=COSMIC;Applet;Tailscale;VPN;Tailnet;
+StartupNotify=true
+NoDisplay=true
+X-CosmicApplet=true
+X-CosmicShrinkable=true
+X-CosmicHoverPopup=Auto
+X-OverflowPriority=8
