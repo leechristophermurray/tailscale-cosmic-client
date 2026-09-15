@@ -71,6 +71,10 @@ build the workspace. Everything else, Wayland included, is loaded at runtime.
 
 ## Install
 
+Each channel starts working once it has been set up; see
+[Distribution channels](#distribution-channels) for what is live. Until then,
+the [release tarball](#from-a-release) installs the same files.
+
 Packages install the app, the panel applet and the "Send via Taildrop…" action.
 None of them installs Tailscale itself, which comes from
 [Tailscale's own repositories](https://tailscale.com/download/linux) so that the
@@ -94,7 +98,7 @@ sudo apt install cosmic-tailscale
 ### Fedora
 
 ```sh
-sudo dnf copr enable leechristophermurray/cosmic-tailscale
+sudo dnf copr enable iamthinkking/cosmic-tailscale
 sudo dnf install cosmic-tailscale
 ```
 
@@ -605,12 +609,16 @@ a notice, rather than failing the release.
 3. Create a signing key on a machine you trust, and keep a backup of it offline:
 
    ```sh
-   gpg --quick-gen-key "cosmic-tailscale apt signing <you@example.com>" ed25519 sign 3y
-   gpg --armor --export-secret-keys <fingerprint>
+   gpg --batch --passphrase "" \
+     --quick-gen-key "cosmic-tailscale apt signing <you@example.com>" ed25519 sign 3y
+   gpg --armor --export-secret-keys "cosmic-tailscale apt signing"
    ```
 
-4. Store the exported private key as the repository secret `APT_SIGNING_KEY`, and
-   its passphrase, if it has one, as `APT_SIGNING_PASSPHRASE`.
+4. Store the exported private key as the repository secret `APT_SIGNING_KEY`. A
+   key with a passphrase works too; put the passphrase in
+   `APT_SIGNING_PASSPHRASE`. Since the secret already holds the key itself, a
+   passphrase beside it protects little — what matters is that this key signs
+   nothing else.
 
 The workflow publishes the matching public key beside the repository. Before the
 key expires, extend it and update the secret. Users have to fetch the keyring
@@ -624,16 +632,25 @@ file again to see the new expiry date, so announce it in the release notes.
 
    ```sh
    copr-cli create cosmic-tailscale --enable-net on \
-     --chroot fedora-43-x86_64 --chroot fedora-44-x86_64 --chroot fedora-rawhide-x86_64
+     --chroot fedora-43-x86_64 --chroot fedora-44-x86_64 \
+     --chroot fedora-45-x86_64 --chroot fedora-rawhide-x86_64
    ```
 
+   `copr-cli list-chroots` shows what is currently offered.
 3. Copy the API token from <https://copr.fedorainfracloud.org/api/> (the contents
-   of `~/.config/copr`) into the secret `COPR_CONFIG`.
+   of `~/.config/copr`) into the secret `COPR_CONFIG`. COPR tokens expire, so
+   this needs replacing roughly twice a year.
 4. Set the repository variable `COPR_PROJECT` to `<fedora-account>/cosmic-tailscale`.
 
-The install command above assumes that account is `leechristophermurray`.
+The account here is `iamthinkking`, so `COPR_PROJECT` is
+`iamthinkking/cosmic-tailscale` — no trailing slash, which copr-cli reads as an
+empty project name.
 
 **AUR.**
+
+AUR account registration is closed to new accounts at the moment, so this
+channel is waiting on that. The names `cosmic-tailscale` and
+`cosmic-tailscale-bin` are both unclaimed.
 
 1. Create an account at <https://aur.archlinux.org>.
 2. Make a key for publishing only, and add `aur_deploy.pub` to the account:
