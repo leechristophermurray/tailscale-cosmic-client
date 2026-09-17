@@ -601,6 +601,13 @@ the files `scripts/test-install.sh` checks.
 Each channel needs a one-time setup. Until then its release job skips itself with
 a notice, rather than failing the release.
 
+Put every secret and variable below under **Settings ▸ Secrets and variables ▸
+Actions**, at repository level. A secret added to an *environment* reaches only
+jobs that declare that environment, which is the apt job alone; the COPR and AUR
+jobs would still see nothing and skip. A token belongs in Secrets, never in
+Variables: variables are stored and displayed in plain text and are not masked in
+workflow logs.
+
 **Apt repository.**
 
 1. In **Settings ▸ Pages**, set the source to **GitHub Actions**.
@@ -641,6 +648,7 @@ file again to see the new expiry date, so announce it in the release notes.
    of `~/.config/copr`) into the secret `COPR_CONFIG`. COPR tokens expire, so
    this needs replacing roughly twice a year.
 4. Set the repository variable `COPR_PROJECT` to `<fedora-account>/cosmic-tailscale`.
+   A secret of the same name also works from v0.1.1 onwards.
 
 The account here is `iamthinkking`, so `COPR_PROJECT` is
 `iamthinkking/cosmic-tailscale` — no trailing slash, which copr-cli reads as an

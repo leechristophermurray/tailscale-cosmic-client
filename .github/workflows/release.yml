@@ -143,7 +143,9 @@ jobs:
         id: enabled
         env:
           COPR_CONFIG: ${{ secrets.COPR_CONFIG }}
-          COPR_PROJECT: ${{ vars.COPR_PROJECT }}
+          # A repository variable is the natural home for a project name, but
+          # it is easy to add as a secret instead; either works.
+          COPR_PROJECT: ${{ vars.COPR_PROJECT || secrets.COPR_PROJECT }}
         run: |
           if [[ -n "$COPR_CONFIG" && -n "$COPR_PROJECT" ]]; then
             echo "enabled=true" >> "$GITHUB_OUTPUT"
@@ -159,14 +161,16 @@ jobs:
         if: steps.enabled.outputs.enabled == 'true'
         env:
           COPR_CONFIG: ${{ secrets.COPR_CONFIG }}
-          COPR_PROJECT: ${{ vars.COPR_PROJECT }}
+          COPR_PROJECT: ${{ vars.COPR_PROJECT || secrets.COPR_PROJECT }}
           CLONE_URL: ${{ github.server_url }}/${{ github.repository }}.git
           TAG: ${{ github.ref_name }}
         run: |
           mkdir -p ~/.config
           printf '%s\n' "$COPR_CONFIG" > ~/.config/copr
           chmod 600 ~/.config/copr
-          copr-cli buildscm "$COPR_PROJECT" --clone-url "$CLONE_URL" --commit "$TAG" \
+          # copr-cli splits the project on "/", so a trailing slash would read
+          # as an empty project name.
+          copr-cli buildscm "${COPR_PROJECT%/}" --clone-url "$CLONE_URL" --commit "$TAG" \
             --method make_srpm --spec packaging/rpm/cosmic-tailscale.spec
 
   aur:
