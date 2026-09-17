@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>cosmic-tailscale — a native Tailscale client for COSMIC</title>
+<meta name="description" content="A native Tailscale client and panel applet for the COSMIC desktop. Machines, exit nodes, Taildrop, Caddy, Beszel monitoring and SFTP mounts, talking to tailscaled directly.">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+<meta property="og:title" content="cosmic-tailscale">
+<meta property="og:description" content="A native Tailscale client and panel applet for the COSMIC desktop.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="@SITE@/">
+<meta property="og:image" content="@SITE@/assets/applet-and-window.png">
+
+<header class="site-header">
+  <svg width="28" height="28" viewBox="0 0 16 16" aria-hidden="true" style="color: var(--accent)">
+    <g fill="currentColor">
+      <circle cx="3" cy="3" r="1.6" opacity="0.4"/><circle cx="8" cy="3" r="1.6"/><circle cx="13" cy="3" r="1.6" opacity="0.4"/>
+      <circle cx="3" cy="8" r="1.6"/><circle cx="8" cy="8" r="1.6"/><circle cx="13" cy="8" r="1.6"/>
+      <circle cx="3" cy="13" r="1.6" opacity="0.4"/><circle cx="8" cy="13" r="1.6"/><circle cx="13" cy="13" r="1.6" opacity="0.4"/>
+    </g>
+  </svg>
+  <strong>cosmic-tailscale</strong>
+  <nav>
+    <a href="#install">Install</a>
+    <a href="#features">Features</a>
+    <a href="@REPO@">Source</a>
+  </nav>
+</header>
+
+<main>
+  <div class="hero">
+    <h1>Your tailnet, native to COSMIC</h1>
+    <p class="lead">
+      A Tailscale client and panel applet built with libcosmic. It talks to the
+      <code>tailscaled</code> daemon over its own socket, so it shows the real state of your
+      tailnet — no command line wrapped, no output parsed.
+    </p>
+    <div class="actions">
+      <a class="button primary" href="#install">Install</a>
+      <a class="button secondary" href="@REPO@">View source</a>
+      <span class="version">Latest release: <a href="@REPO@/releases/latest">v@VERSION@</a></span>
+    </div>
+    <figure>
+      <img src="assets/applet-and-window.png" width="2566" height="1902"
+           alt="The panel applet's popup open over the main window, showing the Machines page">
+      <figcaption>The applet for everyday control, the window for everything else. Tailnet names and addresses are masked in these screenshots.</figcaption>
+    </figure>
+  </div>
+
+  <section id="install">
+    <h2>Install</h2>
+    <p class="section-lead">
+      Packages carry the app, the panel applet and a “Send via Taildrop…” action for the
+      file manager. Tailscale itself comes from
+      <a href="https://tailscale.com/download/linux">Tailscale's own repositories</a>, so the
+      daemon keeps receiving its security updates.
+    </p>
+
+    <div class="install">
+      <div class="card">
+        <div><span class="badge live">Available</span></div>
+        <h3>Pop!_OS, Ubuntu, Debian</h3>
+        <p>Pop!_OS 24.04, Ubuntu 24.04+, Debian 13+ on x86_64.</p>
+<pre><code>sudo curl -fsSLo /usr/share/keyrings/cosmic-tailscale-archive-keyring.gpg \
+  @SITE@/cosmic-tailscale-archive-keyring.gpg
+sudo curl -fsSLo /etc/apt/sources.list.d/cosmic-tailscale.sources \
+  @SITE@/cosmic-tailscale.sources
+sudo apt update
+sudo apt install cosmic-tailscale</code></pre>
+        <p><a href="apt/">About this repository</a></p>
+      </div>
+
+      <div class="card">
+        <div><span class="badge live">Available</span></div>
+        <h3>Any distribution</h3>
+        <p>A tarball built and tested by CI. No Rust toolchain needed.</p>
+<pre><code>tar -xzf cosmic-tailscale-@VERSION@-x86_64-linux.tar.gz
+cd cosmic-tailscale-@VERSION@-x86_64-linux
+./install.sh          # into ~/.local</code></pre>
+        <p><a href="@REPO@/releases/latest">Download the tarball</a> — check it against the
+        <code>.sha256</code> beside it.</p>
+      </div>
+
+      <div class="card">
+        <div><span class="badge">@FEDORA_STATUS@</span></div>
+        <h3>Fedora</h3>
+        <p>Built for current Fedora releases in COPR.</p>
+<pre><code>sudo dnf copr enable @COPR@
+sudo dnf install cosmic-tailscale</code></pre>
+      </div>
+
+      <div class="card">
+        <div><span class="badge">@AUR_STATUS@</span></div>
+        <h3>Arch Linux</h3>
+        <p>From source, or prebuilt from the release tarball.</p>
+<pre><code>paru -S cosmic-tailscale
+# or: paru -S cosmic-tailscale-bin</code></pre>
+      </div>
+    </div>
+
+    <p class="note">
+      <strong>After installing:</strong> add the applet in
+      <em>Settings ▸ Desktop ▸ Panel ▸ Configure panel applets</em>. If Tailscale is not set
+      up yet, the tarball ships <code>install-tailscale.sh</code>, which installs the daemon
+      from Tailscale's repositories and makes you its operator — without which every change
+      the app makes is refused.
+    </p>
+  </section>
+
+  <section id="features">
+    <h2>What it does</h2>
+    <p class="section-lead">
+      Everything inherits the desktop's theme, accent colour and density, because it is
+      built with libcosmic rather than wrapped in a web view.
+    </p>
+
+    <div class="cards">
+      <div class="card">
+        <h3>Machines</h3>
+        <p>Every node, with the path actually in use — direct WireGuard or a DERP relay —
+        copyable addresses, a latency probe, and one-click Tailscale SSH in cosmic-term.</p>
+      </div>
+      <div class="card">
+        <h3>Files over SFTP</h3>
+        <p>Mount a machine's home directory through GVfs and browse it in COSMIC Files.
+        Double-click a machine's disk usage in Monitoring to open it there.</p>
+      </div>
+      <div class="card">
+        <h3>Taildrop</h3>
+        <p>Send and receive in one place, through the desktop's own file chooser, with a
+        handler in the file manager's Open With menu.</p>
+      </div>
+      <div class="card">
+        <h3>Exit nodes</h3>
+        <p>Pick a peer to carry your traffic or advertise this machine, with real latency
+        beside each option and a clear note when a route is still unapproved.</p>
+      </div>
+      <div class="card">
+        <h3>Caddy</h3>
+        <p>Manage a reverse proxy on a tailnet peer through its JSON admin API, reached
+        directly or over a Tailscale SSH tunnel — no Caddyfile, no restart.</p>
+      </div>
+      <div class="card">
+        <h3>Monitoring</h3>
+        <p>Hardware health from a <a href="https://beszel.dev">Beszel</a> hub on your
+        tailnet, with native charts, and desktop notifications when its alerts fire.</p>
+      </div>
+    </div>
+
+    <div class="shots">
+      <figure>
+        <img src="assets/machines.png" width="2098" height="1611" loading="lazy"
+             alt="The Machines page with a machine selected, showing addresses, connection path and actions">
+        <figcaption>Machines: how each peer is really reached.</figcaption>
+      </figure>
+      <figure>
+        <img src="assets/monitoring.png" width="2209" height="1611" loading="lazy"
+             alt="The Monitoring page showing summary cards and time-series charts for a machine">
+        <figcaption>Monitoring: CPU, memory, disk, load, sensors and containers.</figcaption>
+      </figure>
+      <figure>
+        <img src="assets/taildrop.png" width="2098" height="1611" loading="lazy"
+             alt="The Taildrop page: choose a machine, then select files to send">
+        <figcaption>Taildrop: both directions, one page.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section id="how">
+    <h2>How it stays honest</h2>
+    <div class="cards">
+      <div class="card">
+        <h3>Event-driven</h3>
+        <p><code>tailscaled</code> pushes state over its IPN bus, so flipping the switch in
+        another terminal updates the window immediately.</p>
+      </div>
+      <div class="card">
+        <h3>Nothing assumed</h3>
+        <p>Every write goes through the daemon, and the UI reconciles against what comes
+        back rather than believing its own optimism.</p>
+      </div>
+      <div class="card">
+        <h3>Your data stays yours</h3>
+        <p>The Beszel password lives in the system keyring; the hub, the Caddy peer and the
+        daemon are all reached over your tailnet.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <hr>
+  <p>
+    <a href="@REPO@">Source</a> · <a href="@REPO@/issues">Issues</a> ·
+    <a href="@REPO@/releases">Releases</a> · <a href="apt/">Apt repository</a> ·
+    MPL-2.0
+  </p>
+  <p>
+    Not affiliated with Tailscale Inc. or System76. Tailscale is a trademark of
+    Tailscale Inc.
+  </p>
+</footer>

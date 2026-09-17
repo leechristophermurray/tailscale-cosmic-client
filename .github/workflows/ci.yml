@@ -90,6 +90,8 @@ jobs:
         run: ./scripts/test-install-tailscale.sh
       - name: Install and package scripts
         run: ./scripts/test-install.sh
+      - name: Project page
+        run: ./scripts/test-site.sh
       # STRICT makes a missing linter a failure rather than a skipped check.
       - name: Shell, spec, desktop entry and AppStream checks
         run: STRICT=1 ./scripts/check-packaging.sh

@@ -1,0 +1,194 @@
+/* One stylesheet, no web fonts and no frameworks: the page should render
+   instantly and look at home on a COSMIC desktop in either theme. */
+
+:root {
+    color-scheme: light dark;
+    --bg: #f7f7f8;
+    --surface: #ffffff;
+    --surface-2: #f0f0f2;
+    --border: #d9d9de;
+    --text: #1b1b1f;
+    --muted: #5c5c66;
+    --accent: #2c6bed;
+    --accent-text: #ffffff;
+    --radius: 14px;
+    --shadow: 0 1px 2px rgb(0 0 0 / 6%), 0 8px 24px rgb(0 0 0 / 6%);
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg: #16161a;
+        --surface: #1e1e23;
+        --surface-2: #26262c;
+        --border: #34343c;
+        --text: #f2f2f5;
+        --muted: #a8a8b3;
+        --accent: #6ea1ff;
+        --accent-text: #10131a;
+        --shadow: 0 1px 2px rgb(0 0 0 / 40%), 0 8px 24px rgb(0 0 0 / 35%);
+    }
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.65 system-ui, -apple-system, "Segoe UI", sans-serif;
+    -webkit-text-size-adjust: 100%;
+}
+
+main, header, footer { max-width: 62rem; margin: 0 auto; padding: 0 1.25rem; }
+
+a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+a:hover { text-decoration-thickness: 2px; }
+
+code, pre { font-family: ui-monospace, "Cascadia Code", "Source Code Pro", monospace; }
+
+code { background: var(--surface-2); padding: 0.1em 0.35em; border-radius: 6px; font-size: 0.9em; }
+
+pre {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.1rem;
+    overflow-x: auto;
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+pre code { background: none; padding: 0; font-size: inherit; }
+
+/* ---- header ------------------------------------------------------------ */
+
+.site-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding-top: 1.5rem;
+    padding-bottom: 1.5rem;
+}
+
+.site-header img { width: 28px; height: 28px; }
+.site-header strong { font-size: 1.05rem; }
+.site-header nav { margin-left: auto; display: flex; gap: 1.25rem; font-size: 0.95rem; }
+
+/* ---- hero -------------------------------------------------------------- */
+
+.hero { padding: 2rem 0 1rem; }
+
+.hero h1 {
+    font-size: clamp(2rem, 1.3rem + 2.6vw, 3.1rem);
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    margin: 0 0 0.75rem;
+}
+
+.hero p.lead { font-size: 1.15rem; color: var(--muted); max-width: 44rem; margin: 0 0 1.5rem; }
+
+.actions { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; }
+
+.button {
+    display: inline-block;
+    padding: 0.6rem 1.15rem;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.button.primary { background: var(--accent); color: var(--accent-text); }
+.button.secondary { background: var(--surface); border-color: var(--border); color: var(--text); }
+.button:hover { filter: brightness(1.05); }
+
+.version { color: var(--muted); font-size: 0.95rem; }
+
+figure { margin: 2.5rem 0 0; }
+
+figure img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    background: var(--surface);
+}
+
+figcaption { color: var(--muted); font-size: 0.9rem; margin-top: 0.6rem; }
+
+/* ---- sections ---------------------------------------------------------- */
+
+section { padding: 3.5rem 0 0; }
+section > h2 { font-size: 1.6rem; letter-spacing: -0.01em; margin: 0 0 0.5rem; }
+section > p.section-lead { color: var(--muted); margin: 0 0 1.5rem; max-width: 44rem; }
+
+.cards { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); }
+
+.card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.1rem 1.2rem;
+}
+
+.card h3 { margin: 0 0 0.35rem; font-size: 1.05rem; }
+.card p { margin: 0; color: var(--muted); font-size: 0.95rem; }
+
+.shots { display: grid; gap: 1.5rem; grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr)); }
+.shots figure { margin: 0; }
+
+/* ---- install ----------------------------------------------------------- */
+
+.install { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr)); }
+
+.install { grid-template-columns: repeat(auto-fit, minmax(24rem, 1fr)); }
+.install .card { display: flex; flex-direction: column; gap: 0.75rem; }
+
+/* Commands wrap rather than scroll sideways: a hidden second half of a command
+   is worse than a wrapped one, and copying still yields the real line breaks. */
+.install pre {
+    margin: 0;
+    font-size: 0.84rem;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.badge {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    background: var(--surface-2);
+    color: var(--muted);
+    border: 1px solid var(--border);
+}
+
+.badge.live { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); }
+
+.note {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: var(--radius);
+    padding: 1rem 1.2rem;
+    margin: 1.5rem 0 0;
+    color: var(--muted);
+}
+
+.note strong { color: var(--text); }
+
+/* ---- footer ------------------------------------------------------------ */
+
+footer { padding: 3.5rem 1.25rem 3rem; color: var(--muted); font-size: 0.9rem; }
+footer hr { border: 0; border-top: 1px solid var(--border); margin: 0 0 1.5rem; }
+footer a { color: inherit; }
+
+@media (max-width: 40rem) {
+    .site-header nav { display: none; }
+    .hero { padding-top: 1rem; }
+}

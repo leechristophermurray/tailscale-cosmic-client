@@ -65,71 +65,16 @@ jobs:
   # the README. Until its secret exists a job skips itself with a notice, so a
   # release never fails for want of one.
 
-  apt:
-    name: Apt repository
+  # The page and the apt repository are published together; see pages.yml.
+  pages:
+    name: Site and apt repository
     needs: publish
-    runs-on: ubuntu-24.04
-    timeout-minutes: 15
     permissions:
       contents: read
       pages: write
       id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
-    steps:
-      - name: Check for the signing key
-        id: enabled
-        env:
-          APT_SIGNING_KEY: ${{ secrets.APT_SIGNING_KEY }}
-        run: |
-          if [[ -n "$APT_SIGNING_KEY" ]]; then
-            echo "enabled=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "::notice::APT_SIGNING_KEY is not set, so the apt repository was not published."
-          fi
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        if: steps.enabled.outputs.enabled == 'true'
-        with:
-          persist-credentials: false
-      - name: Install apt-ftparchive
-        if: steps.enabled.outputs.enabled == 'true'
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq --no-install-recommends apt-utils
-      # The site is rebuilt whole on every release, from the .debs attached to
-      # every published release, so older versions stay installable.
-      - name: Collect every released .deb
-        if: steps.enabled.outputs.enabled == 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
-          REPO: ${{ github.repository }}
-        run: |
-          mkdir -p debs
-          gh release list --repo "$REPO" --limit 200 --exclude-drafts --exclude-pre-releases \
-              --json tagName --jq '.[].tagName' |
-            while read -r tag; do
-              gh release download "$tag" --repo "$REPO" --pattern '*.deb' --dir debs --skip-existing || true
-            done
-          ls -l debs
-      - name: Build and sign the repository
-        if: steps.enabled.outputs.enabled == 'true'
-        env:
-          APT_SIGNING_KEY: ${{ secrets.APT_SIGNING_KEY }}
-          SIGNING_PASSPHRASE: ${{ secrets.APT_SIGNING_PASSPHRASE }}
-        run: |
-          GNUPGHOME="$(mktemp -d)"
-          export GNUPGHOME
-          gpg --batch --import <<< "$APT_SIGNING_KEY"
-          owner="${GITHUB_REPOSITORY_OWNER,,}"
-          ./scripts/apt-repo.sh debs site "https://$owner.github.io/${GITHUB_REPOSITORY#*/}"
-      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
-        if: steps.enabled.outputs.enabled == 'true'
-        with:
-          path: site
-      - id: deploy
-        if: steps.enabled.outputs.enabled == 'true'
-        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+    uses: ./.github/workflows/pages.yml
+    secrets: inherit
 
   copr:
     name: Fedora COPR

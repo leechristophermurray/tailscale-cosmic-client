@@ -9,7 +9,10 @@
 #   pool/main/c/cosmic-tailscale/*.deb
 #   cosmic-tailscale-archive-keyring.gpg   the public key, for Signed-By
 #   cosmic-tailscale.sources               a ready-made deb822 sources file
-#   index.html                             how to add the repository
+#   apt/index.html                         how to add the repository
+#
+# The site root is shared with the project's page (scripts/build-site.sh), so
+# this writes only the files above and never clears the directory.
 #
 # Usage: scripts/apt-repo.sh DEB_DIR OUT_DIR BASE_URL
 #
@@ -98,20 +101,36 @@ Components: $COMPONENT
 Signed-By: /usr/share/keyrings/$keyring_file
 SOURCES
 
-cat > index.html <<HTML
+mkdir -p apt
+cat > apt/index.html <<HTML
 <!doctype html>
+<html lang="en">
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>cosmic-tailscale apt repository</title>
-<style>body{font:16px/1.5 system-ui,sans-serif;max-width:46rem;margin:2rem auto;padding:0 1rem}pre{background:#f3f3f3;padding:1rem;overflow-x:auto}</style>
-<h1>cosmic-tailscale apt repository</h1>
-<p>Packages for Pop!_OS 24.04, Ubuntu 24.04 and later, and Debian 13 and later, on
-${architectures[*]}.</p>
-<pre>sudo curl -fsSLo /usr/share/keyrings/$keyring_file $base_url/$keyring_file
-sudo curl -fsSLo /etc/apt/sources.list.d/$NAME.sources $base_url/$NAME.sources
+<link rel="icon" href="../icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../style.css">
+<header class="site-header"><strong><a href="../">cosmic-tailscale</a></strong></header>
+<main>
+<div class="hero">
+<h1>Apt repository</h1>
+<p class="lead">Packages for Pop!_OS 24.04, Ubuntu 24.04 and later, and Debian 13 and
+later, on ${architectures[*]}. Signed; the keyring below is what verifies them.</p>
+<pre><code>sudo curl -fsSLo /usr/share/keyrings/$keyring_file \\
+  $base_url/$keyring_file
+sudo curl -fsSLo /etc/apt/sources.list.d/$NAME.sources \\
+  $base_url/$NAME.sources
 sudo apt update
-sudo apt install $NAME</pre>
-<p>Tailscale itself comes from <a href="https://tailscale.com/download/linux">Tailscale's own repositories</a>.
-Source and issues: <a href="https://github.com/leechristophermurray/tailscale-cosmic-client">GitHub</a>.</p>
+sudo apt install $NAME</code></pre>
+<p class="note">Tailscale itself comes from
+<a href="https://tailscale.com/download/linux">Tailscale's own repositories</a>, so the
+daemon keeps receiving its security updates.</p>
+<p><a href="dists/$SUITE/Release">Release</a> ·
+<a href="$NAME.sources">sources file</a> ·
+<a href="$keyring_file">keyring</a> ·
+<a href="https://github.com/leechristophermurray/tailscale-cosmic-client">source and issues</a></p>
+</div>
+</main>
 HTML
 
 echo "$out"

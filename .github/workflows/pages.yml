@@ -1,0 +1,131 @@
+name: Pages
+
+# The project page and the apt repository share one site, so they are published
+# together: a deployment replaces everything, and publishing either alone would
+# take the other down.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - site/**
+      - docs/assets/img/screenshots/**
+      - scripts/build-site.sh
+      - scripts/apt-repo.sh
+      - Cargo.toml
+      - .github/workflows/pages.yml
+  workflow_dispatch:
+  # Called by the release workflow, once a release and its .deb exist.
+  workflow_call:
+
+permissions:
+  contents: read
+
+# One deployment at a time, and never cancel one halfway: the apt repository
+# would be live with an index that does not match its packages.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  deploy:
+    name: Publish the site
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Work out where this is published
+        id: site
+        run: |
+          owner="${GITHUB_REPOSITORY_OWNER,,}"
+          echo "url=https://$owner.github.io/${GITHUB_REPOSITORY#*/}" >> "$GITHUB_OUTPUT"
+
+      # A channel is announced as available only once packages are actually
+      # published there: set the repository variables FEDORA_STATUS and
+      # AUR_STATUS to "Available" then. Credentials existing is not the same
+      # thing, so they are not used to decide this.
+      - name: Build the page
+        env:
+          SITE_URL: ${{ steps.site.outputs.url }}
+          REPO_URL: ${{ github.server_url }}/${{ github.repository }}
+          COPR_PROJECT: ${{ vars.COPR_PROJECT || secrets.COPR_PROJECT }}
+          FEDORA_STATUS: ${{ vars.FEDORA_STATUS || 'Coming soon' }}
+          AUR_STATUS: ${{ vars.AUR_STATUS || 'Coming soon' }}
+        run: ./scripts/build-site.sh site
+
+      - name: Check for the signing key
+        id: apt
+        env:
+          APT_SIGNING_KEY: ${{ secrets.APT_SIGNING_KEY }}
+        run: |
+          if [[ -n "$APT_SIGNING_KEY" ]]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::APT_SIGNING_KEY is not set, so the apt repository is not part of this deployment."
+          fi
+
+      # Deploying without the repository would take a working apt source away
+      # from everyone who has added it.
+      - name: Refuse to replace a live apt repository with nothing
+        if: steps.apt.outputs.enabled != 'true'
+        env:
+          SITE: ${{ steps.site.outputs.url }}
+        run: |
+          if curl -fsI "$SITE/dists/stable/InRelease" >/dev/null 2>&1; then
+            echo "::error::An apt repository is live at $SITE but APT_SIGNING_KEY is not set; publishing now would remove it."
+            exit 1
+          fi
+
+      - name: Install apt-ftparchive
+        if: steps.apt.outputs.enabled == 'true'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends apt-utils
+
+      # Rebuilt from the .debs attached to every published release, so older
+      # versions stay installable.
+      - name: Collect every released .deb
+        if: steps.apt.outputs.enabled == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          mkdir -p debs
+          gh release list --repo "$REPO" --limit 200 --exclude-drafts --exclude-pre-releases \
+              --json tagName --jq '.[].tagName' |
+            while read -r tag; do
+              gh release download "$tag" --repo "$REPO" --pattern '*.deb' --dir debs --skip-existing || true
+            done
+          ls -l debs
+
+      - name: Build and sign the repository
+        if: steps.apt.outputs.enabled == 'true'
+        env:
+          APT_SIGNING_KEY: ${{ secrets.APT_SIGNING_KEY }}
+          SIGNING_PASSPHRASE: ${{ secrets.APT_SIGNING_PASSPHRASE }}
+          SITE: ${{ steps.site.outputs.url }}
+        run: |
+          GNUPGHOME="$(mktemp -d)"
+          export GNUPGHOME
+          gpg --batch --import <<< "$APT_SIGNING_KEY"
+          ./scripts/apt-repo.sh debs site "$SITE"
+
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: site
+      - id: deploy
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1

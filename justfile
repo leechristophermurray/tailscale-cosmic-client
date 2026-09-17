@@ -53,7 +53,13 @@ test *args:
     cargo test --workspace {{args}}
     ./scripts/test-install-tailscale.sh
     ./scripts/test-install.sh
+    ./scripts/test-site.sh
     ./scripts/check-packaging.sh
+
+# Build the project page into dist/site (SITE_URL sets the published address)
+site out='dist/site':
+    ./scripts/build-site.sh {{out}}
+    @echo "Preview it with: python3 -m http.server -d {{out}}"
 
 # Line coverage of product code, excluding test modules (--html for a report)
 coverage *args:

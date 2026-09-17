@@ -48,6 +48,7 @@ crates/
     src/applet/              popup, panel icon states, activation tokens
   http-stub/                 test-only HTTP server that records raw requests
 data/                        desktop entries, icons, AppStream metadata
+site/                        the project page published to GitHub Pages
 scripts/                     install, packaging, coverage, and their tests
 docs/                        the brief, design notes, mockups, screenshots
 .github/                     CI, release and Dependabot configuration
@@ -485,7 +486,7 @@ just test        # Rust tests, installer scenarios, packaging checks
 just coverage    # line coverage of product code (--html for a report)
 ```
 
-`just test` runs four layers:
+`just test` runs five layers:
 
 - **Rust tests** — decoding against a redacted capture of real daemon output;
   the update loop driven message by message; every page rendered headlessly;
@@ -496,6 +497,9 @@ just coverage    # line coverage of product code (--html for a report)
 - **`scripts/test-install-tailscale.sh`** — the installer run against simulated
   machines, with fake `tailscale`, `systemctl`, `curl` and `sudo`. It installs
   nothing and downloads nothing, so it behaves the same on any machine.
+- **`scripts/test-site.sh`** — the page builds with no placeholder left, every
+  local link and image resolves, its tags balance, and an apt repository sharing
+  the output directory survives the build.
 - **`scripts/test-install.sh`** — `install.sh` and `package.sh` in a throwaway
   `HOME` with stand-in binaries: the per-user, staged and tarball installs place
   exactly the expected files, uninstall removes them, and two builds of the
@@ -585,6 +589,25 @@ A tag with a suffix, such as `v0.2.0-rc.1`, becomes a pre-release, and is left o
 of the apt repository. The publish job is the only one with write access to the
 repository, and it builds nothing: it ships what CI built and tested in the same
 run.
+
+### The project page
+
+<https://leechristophermurray.github.io/tailscale-cosmic-client> is built from
+`site/` by `scripts/build-site.sh` — a template, one stylesheet, the app icon and
+the README's screenshots, with no build tooling. `just site` writes it to
+`dist/site` and prints how to preview it.
+
+The page and the apt repository share that address, so
+`.github/workflows/pages.yml` publishes them together: a deployment replaces the
+whole site, and publishing either alone would take the other down. It runs on
+pushes to `main` that touch the page, and the release workflow calls it once a
+release exists. Without `APT_SIGNING_KEY` it publishes the page alone — unless a
+repository is already live there, in which case it stops rather than removing it.
+
+Two repository variables control what the page claims: set `FEDORA_STATUS` or
+`AUR_STATUS` to `Available` once packages are actually published in that channel.
+They say "Coming soon" until then, because having credentials is not the same as
+having published.
 
 ### Distribution channels
 
