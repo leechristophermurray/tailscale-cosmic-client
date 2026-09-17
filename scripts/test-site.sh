@@ -136,6 +136,18 @@ PY
 }
 check "the page's tags are balanced" scenario_tags_balance
 
+scenario_refuses_to_build_into_its_own_sources() {
+    local output
+    if output="$(cd "$project" && ./scripts/build-site.sh site 2>&1)"; then
+        echo "it built into site/, where the sources live"
+        return 1
+    fi
+    grep -q "sources live" <<<"$output" || { echo "unhelpful error: $output"; return 1; }
+    # The sources must be untouched.
+    [[ ! -e "$project/site/index.html" ]] || { echo "an index.html was left in site/"; return 1; }
+}
+check "building into the sources is refused" scenario_refuses_to_build_into_its_own_sources
+
 # ---- what it leaves alone ---------------------------------------------------------
 
 scenario_keeps_apt_repo() {

@@ -15,6 +15,14 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 out="${1:-dist/site}"
+
+# Building into the sources would copy files onto themselves and, worse, leave
+# the built page among them.
+if [[ "$(realpath -m "$out")" == "$(realpath site)" ]]; then
+    echo "$out is where the page's sources live; build somewhere else" >&2
+    exit 1
+fi
+
 mkdir -p "$out/assets"
 
 version="$(sed -n '/^\[workspace.package\]/,/^\[/s/^version = "\(.*\)"/\1/p' Cargo.toml)"
